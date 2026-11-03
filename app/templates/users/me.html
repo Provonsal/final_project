@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Me{% endblock %}
+{% block content %}
+<h1>Me</h1>
+{% if error %}<pre class="error">{{ error }}</pre>{% endif %}
+{% if me %}
+  <p><strong>Username:</strong> {{ me.username }}</p>
+  <p><strong>Role:</strong> <span class="role-pill">{{ me.role }}</span></p>
+  <p><strong>ID:</strong> <code>{{ me.id }}</code></p>
+  <details>
+    <summary>Raw JSON</summary>
+    <pre>{{ me | tojson(indent=2) }}</pre>
+  </details>
+{% endif %}
+{% endblock %}

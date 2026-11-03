@@ -1,0 +1,124 @@
+* { box-sizing: border-box; }
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  color: #222;
+  line-height: 1.4;
+}
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+nav a { color: #0645ad; text-decoration: none; }
+nav a:hover { text-decoration: underline; }
+nav form { margin-left: auto; }
+
+h1, h2 { color: #111; }
+h1 { font-size: 1.5rem; }
+a { color: #0645ad; }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+  font-size: 0.95rem;
+}
+th, td {
+  border: 1px solid #e0e0e0;
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+th { background: #f5f5f5; }
+td code, code { background: #f5f5f5; padding: 0 0.25rem; border-radius: 3px; font-size: 0.9em; }
+
+form { margin: 1rem 0; }
+form label {
+  display: block;
+  margin: 0.6rem 0 0.25rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+form label input,
+form label select,
+form label textarea {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.4rem 0.5rem;
+  font: inherit;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-weight: normal;
+}
+form label textarea { min-height: 5rem; resize: vertical; }
+form button, .btn {
+  display: inline-block;
+  margin-top: 0.6rem;
+  padding: 0.4rem 0.9rem;
+  font: inherit;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fafafa;
+  color: #222;
+  text-decoration: none;
+  cursor: pointer;
+  line-height: 1.2;
+}
+form button:hover, .btn:hover { background: #f0f0f0; }
+.btn-danger { color: #900; border-color: #f0c0c0; }
+.btn-danger:hover { background: #ffecec; }
+
+.inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.5rem;
+  margin: 0.5rem 0 1rem;
+}
+.inline-form label { margin: 0; flex: 1 1 240px; }
+.inline-form button { margin-top: 0; }
+
+.error {
+  background: #ffecec;
+  border: 1px solid #f0a0a0;
+  color: #900;
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+  white-space: pre-wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+pre {
+  background: #f5f5f5;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.9em;
+}
+.role-pill {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  background: #eef;
+  color: #334;
+  border: 1px solid #dde;
+}
+.flash {
+  padding: 0.6rem 0.9rem;
+  border-radius: 4px;
+  margin: 0.75rem 0;
+  border: 1px solid transparent;
+}
+.flash-error { background: #ffecec; border-color: #f0a0a0; color: #900; }
+.flash-ok    { background: #eaffea; border-color: #a0e0a0; color: #060; }

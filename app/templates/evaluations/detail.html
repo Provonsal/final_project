@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Evaluation{% endblock %}
+{% block content %}
+<h1>Evaluation</h1>
+<p>
+  {% if can('team:' ~ team_id ~ ':task:' ~ task_id ~ ':evaluation:create') %}
+    <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/evaluation/new">+ New Evaluation</a>
+  {% endif %}
+  <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}">Back to task</a>
+</p>
+{% if error %}<pre class="error">{{ error }}</pre>{% endif %}
+{% if evaluation %}<pre>{{ evaluation | tojson(indent=2) }}</pre>{% endif %}
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Teams{% endblock %}
+{% block content %}
+<h1>Teams</h1>
+<p>
+  {% if can('team:create') %}
+    <a class="btn" href="/views/teams/new">+ New Team</a>
+  {% endif %}
+</p>
+{% if can('team:join') %}
+<form method="post" action="/views/teams/join" class="inline-form">
+  <label>Join by invite code
+    <input name="invite_code" required>
+  </label>
+  <button type="submit">Join</button>
+</form>
+{% endif %}
+{% if error %}<pre class="error">{{ error }}</pre>{% endif %}
+<table>
+  <thead><tr><th>ID</th><th>Name</th><th>Max</th><th></th></tr></thead>
+  <tbody>
+  {% for t in teams %}
+    <tr>
+      <td><code>{{ t.id }}</code></td>
+      <td>{{ t.name }}</td>
+      <td>{{ t.max_per_team }}</td>
+      <td>
+        <a class="btn" href="/views/teams/{{ t.id }}">Open</a>
+        {% if can('team:' ~ t.id ~ ':update') %}
+          <a class="btn" href="/views/teams/{{ t.id }}/edit">Edit</a>
+        {% endif %}
+        {% if can('team:' ~ t.id ~ ':delete') %}
+          <form method="post" action="/views/teams/{{ t.id }}/delete"
+                style="display:inline" onsubmit="return confirm('Удалить команду?')">
+            <button class="btn btn-danger" type="submit">Delete</button>
+          </form>
+        {% endif %}
+        <a class="btn" href="/views/teams/{{ t.id }}/tasks">Tasks</a>
+        <a class="btn" href="/views/teams/{{ t.id }}/meetings">Meetings</a>
+        <a class="btn" href="/views/teams/{{ t.id }}/members">Members</a>
+        <a class="btn" href="/views/calendar/{{ t.id }}">Calendar</a>
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="4">Пусто.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ "New Evaluation" if mode == "create" else "Edit Evaluation" }}{% endblock %}
+{% block content %}
+<h1>{{ "New Evaluation" if mode == "create" else "Edit Evaluation" }}</h1>
+{% if error %}<pre class="error">{{ error }}</pre>{% endif %}
+<form method="post">
+  {% if mode == "create" %}
+    <input type="hidden" name="task_id" value="{{ task_id }}">
+    <p>Task ID: <code>{{ task_id }}</code></p>
+  {% endif %}
+  <label>Rate
+    <select name="rate">
+      {% for r in rates %}
+        <option value="{{ r }}" {% if evaluation.rate == r %}selected{% endif %}>{{ r }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <button type="submit">Save</button>
+  <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/evaluation">Cancel</a>
+</form>
+{% endblock %}

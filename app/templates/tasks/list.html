@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Tasks{% endblock %}
+{% block content %}
+<h1>Tasks</h1>
+<p>
+  {% if can('team:' ~ team_id ~ ':task:create') %}
+    <a class="btn" href="/views/teams/{{ team_id }}/tasks/new">+ New Task</a>
+  {% endif %}
+  <a class="btn" href="/views/teams/{{ team_id }}">Back to team</a>
+</p>
+{% if error %}<pre class="error">{{ error }}</pre>{% endif %}
+<table>
+  <thead><tr><th>ID</th><th>Title</th><th>Status</th><th>Due</th><th></th></tr></thead>
+  <tbody>
+  {% for t in tasks %}
+    <tr>
+      <td><code>{{ t.id }}</code></td>
+      <td>{{ t.title }}</td>
+      <td>{{ status_labels.get(t.status, t.status) }}</td>
+      <td>{{ t.due_date }}</td>
+      <td>
+        <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ t.id }}">Open</a>
+        {% if can('team:' ~ team_id ~ ':task:' ~ t.id ~ ':update') %}
+          <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ t.id }}/edit">Edit</a>
+        {% endif %}
+        {% if can('team:' ~ team_id ~ ':task:' ~ t.id ~ ':delete') %}
+          <form method="post" action="/views/teams/{{ team_id }}/tasks/{{ t.id }}/delete"
+                style="display:inline" onsubmit="return confirm('Удалить задачу?')">
+            <button class="btn btn-danger" type="submit">Delete</button>
+          </form>
+        {% endif %}
+        <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ t.id }}/comments">Comments</a>
+        <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ t.id }}/evaluation">Eval</a>
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="5">Пусто.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

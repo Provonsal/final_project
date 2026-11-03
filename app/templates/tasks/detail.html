@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Task{% endblock %}
+{% block content %}
+<h1>Task</h1>
+<p>
+  {% if can('team:' ~ team_id ~ ':task:' ~ task_id ~ ':update') %}
+    <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/edit">Edit</a>
+  {% endif %}
+  <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/comments">Comments</a>
+  <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/evaluation">Evaluation</a>
+  <a class="btn" href="/views/teams/{{ team_id }}/tasks">Back to tasks</a>
+  {% if can('team:' ~ team_id ~ ':task:' ~ task_id ~ ':delete') %}
+    <form method="post" action="/views/teams/{{ team_id }}/tasks/{{ task_id }}/delete"
+          style="display:inline" onsubmit="return confirm('Удалить задачу?')">
+      <button class="btn btn-danger" type="submit">Delete</button>
+    </form>
+  {% endif %}
+</p>
+<pre>{{ task | tojson(indent=2) }}</pre>
+{% endblock %}

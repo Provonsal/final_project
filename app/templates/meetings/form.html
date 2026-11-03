@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}{{ "New Meeting" if mode == "create" else "Edit Meeting" }}{% endblock %}
+{% block content %}
+<h1>{{ "New Meeting" if mode == "create" else "Edit Meeting" }}</h1>
+{% if error %}<pre class="error">{{ error }}</pre>{% endif %}
+<form method="post">
+  <label>Starts at (ISO)
+    <input name="starts_at" value="{{ meeting.starts_at }}" placeholder="2026-11-03T13:29:07Z">
+  </label>
+  <label>Ends at (ISO)
+    <input name="ends_at" value="{{ meeting.ends_at }}" placeholder="2026-11-03T16:29:07Z">
+  </label>
+  <label>Max members
+    <input name="max_members" type="number" value="{{ meeting.max_members }}">
+  </label>
+  <button type="submit">Save</button>
+  <a class="btn" href="/views/teams/{{ team_id }}/meetings">Cancel</a>
+</form>
+{% endblock %}

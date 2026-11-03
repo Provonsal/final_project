@@ -1,0 +1,129 @@
+from datetime import datetime
+import uuid
+
+from fastapi import HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.RoleEnum import RoleEnum
+from app.models.models import Meeting, Team, TeamInviteCode, TeamUser, User
+from app.repositories.meet import MeetingRepo
+from app.repositories.team import TeamRepo
+from app.repositories.team_invite_code import TeamInviteCodeRepo
+from app.repositories.user import UserRepo
+from app.schemas.create_meeting import MeetingCreate
+from app.schemas.update_meeting import MeetingUpdate
+from sqlalchemy.exc import NoResultFound
+
+
+class MeetingService:
+    """Бизнес-логика для работы с пользователями."""
+
+    def __init__(self, session: AsyncSession):
+        self.session = session
+        self.meeting_repo = MeetingRepo(session)
+        self.team_repo = TeamRepo(session)
+
+    async def get_meetings(
+        self, 
+        team: Team,
+        user: User
+    ):
+        if not await self.team_repo.belongs_to_team(team.id, user.id):
+            raise HTTPException(status_code=403, detail="You are not allowed to do that.")
+
+        if user.role not in (RoleEnum.MANAGER, RoleEnum.MEMBER):
+            raise HTTPException(status_code=403, detail="You are not allowed to do that.")
+        
+        return await self.meeting_repo.get_all_meetings(team.id)
+    
+    async def get_meeting(
+        self, 
+        meeting: Meeting,
+        team: Team,
+        user: User
+    ):
+        if not await self.team_repo.belongs_to_team(team.id, user.id):
+            raise HTTPException(status_code=403, detail="You are not allowed to do that.")
+
+        if user.role not in (RoleEnum.MANAGER, RoleEnum.MEMBER):
+            raise HTTPException(status_code=403, detail="You are not allowed to do that.")
+
+        if meeting.related_team != team.id:
+            raise HTTPException(status_code=400, detail="Meeting does not belong to the specified team.")
+
+        return meeting
+
+    async def create_meeting(
+        self, 
+        data: MeetingCreate,
+        team: Team,
+        user: User
+    ):
+
+        if not await self.team_repo.belongs_to_team(team.id, user.id):
+            raise HTTPException(status_code=403, detail="You are not allowed to do that.")
+
+        if user.role != RoleEnum.MANAGER:
+            raise HTTPException(status_code=403, detail="You are not allowed to do that.")
+        
+
+        new_meeting = Meeting(
+            starts_at=data.starts_at,
+            ends_at=data.ends_at,
+            max_members=data.max_members,
+            team=team,
+            user=user
+        )
+
+        await self.meeting_repo.create(new_meeting)
+        await self.session.commit()
+
+    async def update(
+        self,
+        meeting: Meeting,
+        team: Team,
+        data: MeetingUpdate,
+        user: User
+    ):
+        changes = data.model_dump(exclude_unset=True)
+
+        if user.role != RoleEnum.MANAGER:
+            raise HTTPException(status_code=403, detail="You are not allowed to do that.")
+
+        if not await self.team_repo.belongs_to_team(team.id, user.id):
+            raise HTTPException(status_code=403, detail="You are not allowed to do that.")
+
+        if meeting.related_team != team.id:
+            raise HTTPException(status_code=400, detail="Meeting does not belong to the specified team.")
+
+        if meeting.creator != user.id:
+            raise HTTPException(status_code=403, detail="You do not have permission to update this meeting.")
+        
+        if not changes:
+            return meeting  # нечего менять
+        
+        meeting = await self.meeting_repo.update(meeting.id, changes)
+        
+        await self.session.commit()
+        return meeting
+        
+    async def delete(
+        self,
+        meeting: Meeting,
+        team: Team,
+        user: User
+    ):
+        if user.role != RoleEnum.MANAGER:
+            raise HTTPException(status_code=403, detail="You are not allowed to do that.")
+        
+        if not await self.team_repo.belongs_to_team(team.id, user.id):
+            raise HTTPException(status_code=403, detail="You are not allowed to do that.")
+
+        if meeting.creator != user.id:
+            raise HTTPException(status_code=403, detail="You do not have permission to delete this meeting.")
+
+        if meeting.related_team != team.id:
+            raise HTTPException(status_code=400, detail="Meeting does not belong to the specified team.")
+        
+        await self.meeting_repo.delete(meeting)
+        await self.session.commit()

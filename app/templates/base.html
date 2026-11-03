@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Test Views{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/views/teams/">Teams</a>
+    {% if request.session.get("token") %}
+      <a href="/views/users/me">Me</a>
+      <span class="role-pill">{{ request.session.get("role", "guest") }}</span>
+      <a href="/docs" target="_blank">Swagger</a>
+      <a href="/openapi.json" target="_blank">openapi.json</a>
+      <form method="post" action="/views/auth/logout" style="display:inline">
+          <button type="submit" class="btn">Logout</button>
+      </form>
+    {% else %}
+      <a href="/views/auth/login">Login</a>
+      <a href="/views/auth/register">Register</a>
+    {% endif %}
+  </nav>
+  <main>
+    {% for msg in flashed() %}
+      <div class="flash flash-{{ msg.kind }}">{{ msg.message }}</div>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

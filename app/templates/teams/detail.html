@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Team{% endblock %}
+{% block content %}
+<h1>Team</h1>
+<p>
+  {% if can('team:' ~ team_id ~ ':update') %}
+    <a class="btn" href="/views/teams/{{ team_id }}/edit">Edit</a>
+  {% endif %}
+  <a class="btn" href="/views/teams/{{ team_id }}/members">Members</a>
+  <a class="btn" href="/views/teams/{{ team_id }}/tasks">Tasks</a>
+  <a class="btn" href="/views/teams/{{ team_id }}/meetings">Meetings</a>
+  <a class="btn" href="/views/calendar/{{ team_id }}">Calendar</a>
+  {% if can('team:' ~ team_id ~ ':invite') %}
+    <form method="post" action="/views/teams/{{ team_id }}/code" style="display:inline">
+      <button class="btn" type="submit">Get invite code</button>
+    </form>
+  {% endif %}
+  {% if can('team:' ~ team_id ~ ':delete') %}
+    <form method="post" action="/views/teams/{{ team_id }}/delete" style="display:inline"
+          onsubmit="return confirm('Удалить команду?')">
+      <button class="btn btn-danger" type="submit">Delete</button>
+    </form>
+  {% endif %}
+</p>
+<pre>{{ team | tojson(indent=2) }}</pre>
+{% endblock %}

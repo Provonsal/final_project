@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Calendar{% endblock %}
+{% block content %}
+<h1>Calendar</h1>
+<form method="get">
+  <label>Date from (ISO)
+    <input name="date_from" value="{{ date_from }}" placeholder="2026-11-03T00:00:00Z">
+  </label>
+  <label>Date until (ISO)
+    <input name="date_until" value="{{ date_until }}" placeholder="2026-11-10T23:59:59Z">
+  </label>
+  <button type="submit">Load</button>
+  <a class="btn" href="/views/teams/{{ team_id }}">Back to team</a>
+</form>
+{% if error %}<pre class="error">{{ error }}</pre>{% endif %}
+{% if result %}<pre>{{ result | tojson(indent=2) }}</pre>{% endif %}
+{% endblock %}
