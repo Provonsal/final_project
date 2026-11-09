@@ -43,6 +43,9 @@ class TaskService:
         if not await self.team_repo.belongs_to_team(team.id, data.assignee):
             raise AuthorizationError(message="Assignee is not a member of the team.")
 
+        if user.role != RoleEnum.MANAGER:
+            raise AuthorizationError(message="You are not allowed to do that.")
+
         assignee_user = await self.user_repo.get_by_id(data.assignee)
         
         new_task = Task(
@@ -78,10 +81,16 @@ class TaskService:
         if not await self.team_repo.belongs_to_team(team.id, user.id):
             raise AuthorizationError(message="You are not allowed to do that.")
 
-        try:
-            tasks = await self.task_repo.get_all_tasks(team.id)
-        except NoResultFound:
-            raise NotFoundError("Task", f"No tasks found for team with ID {team.id}.")
+        if user.role != RoleEnum.MANAGER:
+            try:
+                tasks = await self.task_repo.get_all_tasks_for_user(team.id, user.id)
+            except NoResultFound:
+                raise NotFoundError("Task", f"No tasks found for user with id {user.id}.")
+        else:
+            try:
+                tasks = await self.task_repo.get_all_tasks(team.id)
+            except NoResultFound:
+                raise NotFoundError("Task", f"No tasks found for team id {team.id}.")
 
         return tasks
 
@@ -97,7 +106,7 @@ class TaskService:
         if task.team_id != team.id:
             raise WrongInputError(message="Task does not belong to the specified team.")
 
-        if task.assignee != user.id and user.role != RoleEnum.MANAGER:
+        if task.assignee != user.id or user.role != RoleEnum.MANAGER:
             raise AuthorizationError(message="You are not allowed to do that.")
 
         return task
@@ -117,7 +126,7 @@ class TaskService:
         if task.team_id != team.id:
             raise WrongInputError(message="Task does not belong to the specified team.")
 
-        if task.assignee != user.id and user.role != RoleEnum.MANAGER:
+        if user.role != RoleEnum.MANAGER:
             raise AuthorizationError(message="You are not allowed to do that.")
 
         if not changes:
@@ -139,7 +148,7 @@ class TaskService:
         if task.team_id != team.id:
             raise WrongInputError(message="Task does not belong to the specified team.")
 
-        if task.assignee != user.id and user.role != RoleEnum.MANAGER:
+        if user.role != RoleEnum.MANAGER:
             raise AuthorizationError(message="You are not allowed to do that.")
         
         
