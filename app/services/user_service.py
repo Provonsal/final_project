@@ -70,6 +70,3 @@ class UserService:
     async def get_user(self, user_id: UUID):
         return await self.user_repo.get_by_id(user_id)
         
-
-    async def get_users(self, skip: int = 0, limit: int = 100):
-        ...
