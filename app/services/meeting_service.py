@@ -4,7 +4,7 @@ import uuid
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.exc.exceptions import AuthorizationError, WrongInputError
+from app.exc.exceptions import AuthorizationError, WrongInputError, BusinessRuleError
 from app.models.RoleEnum import RoleEnum
 from app.models.models import Meeting, Team, TeamInviteCode, TeamUser, User
 from app.repositories.meet import MeetingRepo
@@ -25,22 +25,53 @@ class MeetingService:
         self.meeting_repo = MeetingRepo(session)
         self.team_repo = TeamRepo(session)
 
-    async def get_meetings(
-        self, 
-        team: Team,
-        user: User
-    ):
+    async def get_meetings(self, team: Team, user: User):
+        """
+        Возвращает все встречи команды.
+
+        Аргументы:
+            team: Команда, встречи которой запрашиваются.
+            user: Пользователь, выполняющий запрос.
+
+        Возвращает:
+            list[Meeting]: Список встреч команды.
+
+        Исключения:
+            AuthorizationError: Если пользователь не состоит в команде.
+
+        Требования:
+            Пользователь должен состоять в команде team.
+        """
+
         if not await self.team_repo.belongs_to_team(team.id, user.id):
             raise AuthorizationError(message="You are not allowed to do that.")
         
         return await self.meeting_repo.get_all_meetings(team.id)
     
-    async def get_meeting(
-        self, 
-        meeting: Meeting,
-        team: Team,
-        user: User
-    ):
+    async def get_meeting(self, meeting: Meeting, team: Team, user: User):
+        """
+        Возвращает встречу, если у пользователя есть к ней доступ.
+
+        Аргументы:
+            meeting: Встреча, которую нужно получить.
+            team: Команда, к которой должна относиться встреча.
+            user: Пользователь, выполняющий запрос.
+
+        Возвращает:
+            Meeting: Запрошенная встреча.
+
+        Исключения:
+            AuthorizationError: Если пользователь не состоит в команде.
+            AuthorizationError: Если пользователь не является участником встречи.
+            WrongInputError: Если встреча не относится к указанной команде.
+
+        Требования:
+            Пользователь должен состоять в команде team.
+            Пользователь должен быть участником встречи
+                (meeting_repo.belongs_to_meeting(meeting.id, user.id)).
+            Встреча должна принадлежать команде team.
+        """
+
         if not await self.team_repo.belongs_to_team(team.id, user.id):
             raise AuthorizationError(message="You are not allowed to do that.")
 
@@ -52,12 +83,40 @@ class MeetingService:
 
         return meeting
 
-    async def create_meeting(
-        self, 
-        data: MeetingCreate,
-        team: Team,
-        user: User
-    ):
+    async def create_meeting(self, data: MeetingCreate, team: Team, user: User):
+        """
+        Создает встречу в команде.
+
+        Аргументы:
+            data: Данные для создания встречи (starts_at, ends_at, max_members).
+            team: Команда, в которой создается встреча.
+            user: Пользователь, создающий встречу.
+
+        Возвращает:
+            Meeting: Созданная встреча.
+
+        Исключения:
+            AuthorizationError: Если пользователь не состоит в команде.
+            AuthorizationError: Если роль пользователя не MANAGER.
+            BusinessRuleError: Если starts_at >= ends_at.
+            BusinessRuleError: Если max_members <= 0.
+            BusinessRuleError: Если max_members > team.max_per_team.
+            BusinessRuleError: Если starts_at находится в прошлом.
+
+        Требования:
+            Пользователь должен состоять в команде team.
+            Роль пользователя должна быть MANAGER.
+            starts_at должен быть строго меньше ends_at.
+            max_members должен быть не меньше 1.
+            max_members не должен превышать team.max_per_team.
+            starts_at не должен быть в прошлом.
+
+        Поведение:
+            Создатель встречи назначается ее автором (creator).
+
+        Побочные эффекты:
+            Создает встречу и выполняет commit сессии.
+        """
 
         if not await self.team_repo.belongs_to_team(team.id, user.id):
             raise AuthorizationError(message="You are not allowed to do that.")
@@ -89,13 +148,36 @@ class MeetingService:
         await self.session.commit()
         return new_meeting
 
-    async def update(
-        self,
-        meeting: Meeting,
-        team: Team,
-        data: MeetingUpdate,
-        user: User
-    ):
+    async def update(self, meeting: Meeting, team: Team, data: MeetingUpdate, user: User):
+        """
+        Частично обновляет встречу.
+
+        Аргументы:
+            meeting: Встреча, которую нужно обновить.
+            team: Команда, к которой должна относиться встреча.
+            data: Данные для частичного обновления встречи.
+            user: Пользователь, выполняющий обновление.
+
+        Возвращает:
+            Meeting: Обновленная встреча. Если изменений нет, возвращает текущую
+                встречу без выполнения обновления.
+
+        Исключения:
+            AuthorizationError: Если пользователь не состоит в команде.
+            AuthorizationError: Если роль пользователя не MANAGER.
+            WrongInputError: Если встреча не относится к указанной команде.
+            AuthorizationError: Если пользователь не является создателем встречи.
+
+        Требования:
+            Пользователь должен состоять в команде team.
+            Роль пользователя должна быть MANAGER.
+            Встреча должна принадлежать команде team.
+            Пользователь должен быть создателем встречи.
+
+        Побочные эффекты:
+            При наличии изменений обновляет встречу и выполняет commit сессии.
+        """
+
         changes = data.model_dump(exclude_unset=True)
 
         if not await self.team_repo.belongs_to_team(team.id, user.id):
@@ -118,14 +200,33 @@ class MeetingService:
         await self.session.commit()
         return meeting
         
-    async def delete(
-        self,
-        meeting: Meeting,
-        team: Team,
-        user: User
-    ):
-        if user.role != RoleEnum.MANAGER:
-            raise AuthorizationError(message="You are not allowed to do that.")
+    async def delete(self, meeting: Meeting, team: Team, user: User):
+        """
+        Удаляет встречу.
+
+        Аргументы:
+            meeting: Встреча, которую нужно удалить.
+            team: Команда, к которой должна относиться встреча.
+            user: Пользователь, выполняющий удаление.
+
+        Возвращает:
+            OperationSuccess: Результат успешной операции.
+
+        Исключения:
+            AuthorizationError: Если пользователь не состоит в команде.
+            AuthorizationError: Если роль пользователя не MANAGER.
+            WrongInputError: Если встреча не относится к указанной команде.
+            AuthorizationError: Если пользователь не является создателем встречи.
+
+        Требования:
+            Пользователь должен состоять в команде team.
+            Роль пользователя должна быть MANAGER.
+            Встреча должна принадлежать команде team.
+            Пользователь должен быть создателем встречи.
+
+        Побочные эффекты:
+            Удаляет встречу и выполняет commit сессии.
+        """
 
         if not await self.team_repo.belongs_to_team(team.id, user.id):
             raise AuthorizationError(message="You are not allowed to do that.")
