@@ -30,9 +30,34 @@ class UserService:
         self.user_repo = UserRepo(session)
 
     async def register(self, user: UserRegister):
+        """
+        Регистрирует нового пользователя.
+
+        Аргументы:
+            user: Данные для регистрации (username, name, password, role).
+
+        Возвращает:
+            UserResponse: Ответ с логином, сообщением об успешной регистрации
+                и ролью созданного пользователя.
+
+        Исключения:
+            WrongInputError: Если пользователь с таким логином уже существует.
+
+        Требования:
+            Логин (user.username) должен быть уникальным.
+
+        Поведение:
+            Если роль не передана (user.role is None), назначается RoleEnum.GUEST.
+            Для пароля генерируются соль и хеш через PWDManager.
+            Создаются записи User и UserCredentials.
+
+        Побочные эффекты:
+            Создает пользователя и его учетные данные, выполняет commit сессии.
+        """
+
         try:
             await self.user_repo.get_by_login(user.username)
-            raise WrongInputError(message="User with this email already exists")
+            raise WrongInputError(message="User with this login already exists")
         except NoResultFound:
             pass
 
@@ -64,9 +89,32 @@ class UserService:
         
 
     async def me(self, current_user: User):
+        """
+        Возвращает профиль текущего пользователя.
+
+        Аргументы:
+            current_user: Аутентифицированный пользователь.
+
+        Возвращает:
+            UserMeResponse: Данные текущего пользователя (id, username, role).
+        """
         
         return UserMeResponse(id=current_user.id,username=current_user.email, role=current_user.role.value)
 
     async def get_user(self, user_id: UUID):
+        """
+        Возвращает пользователя по его идентификатору.
+
+        Аргументы:
+            user_id: UUID пользователя.
+
+        Возвращает:
+            User: Найденный пользователь, полученный из UserRepo.get_by_id.
+
+        Исключения:
+            NoResultFound: Если пользователь с указанным ID не найден
+                (пробрасывается из репозитория).
+        """
+
         return await self.user_repo.get_by_id(user_id)
         
