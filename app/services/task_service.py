@@ -21,7 +21,7 @@ from app.schemas.task_update import TaskUpdate
 
 
 class TaskService:
-    """Бизнес-логика для работы с пользователями."""
+    """Бизнес-логика для работы с задачами."""
 
     def __init__(self, session: AsyncSession):
         self.session = session
@@ -30,12 +30,35 @@ class TaskService:
         self.user_repo = UserRepo(session)
         self.evaluation_repo = EvaluationRepo(session)
 
-    async def create_task(
-        self, 
-        data: TaskCreate,
-        team: Team,
-        user: User
-    ):
+    async def create_task(self, data: TaskCreate, team: Team, user: User):
+        """
+        Создает задачу в команде и назначает ее участнику команды.
+
+        Аргументы:
+            data: Данные для создания задачи (title, description, assignee,
+                due_date, status).
+            team: Команда, в которой создается задача.
+            user: Пользователь, выполняющий создание задачи.
+
+        Возвращает:
+            Task: Созданная задача.
+
+        Исключения:
+            AuthorizationError: Если пользователь не состоит в команде.
+            AuthorizationError: Если assignee не состоит в команде.
+            AuthorizationError: Если пользователь не имеет роли manager.
+
+        Требования:
+            Пользователь должен состоять в команде team.
+            Assignee (data.assignee) должен состоять в команде team.
+
+        Поведение:
+            Задача создается с указанным assignee в качестве исполнителя.
+            Для задачи создается оценка TaskRate со значением RateEnum.UNRATED.
+
+        Побочные эффекты:
+            Создает задачу, создает запись оценки и выполняет commit сессии.
+        """
 
         if not await self.team_repo.belongs_to_team(team.id, user.id):
             raise AuthorizationError(message="You are not allowed to do that.")
@@ -70,13 +93,24 @@ class TaskService:
         await self.session.commit()
         return new_task
 
-    async def get_all_tasks(
-        self,
-        team: Team,
-        user: User
-    ):
+    async def get_all_tasks(self, team: Team, user: User):
+        """
+        Возвращает все задачи команды.
 
+        Аргументы:
+            team: Команда, задачи которой запрашиваются.
+            user: Пользователь, выполняющий запрос.
 
+        Возвращает:
+            list[Task]: Список задач команды.
+
+        Исключения:
+            AuthorizationError: Если пользователь не состоит в команде.
+            NotFoundError: Если для команды не найдено ни одной задачи.
+
+        Требования:
+            Пользователь должен состоять в команде team.
+        """
         
         if not await self.team_repo.belongs_to_team(team.id, user.id):
             raise AuthorizationError(message="You are not allowed to do that.")
@@ -94,12 +128,30 @@ class TaskService:
 
         return tasks
 
-    async def get_task(
-        self,
-        task: Task,
-        team: Team,
-        user: User
-    ):
+    async def get_task(self, task: Task, team: Team, user: User):
+        """
+        Возвращает задачу, если у пользователя есть к ней доступ.
+
+        Аргументы:
+            task: Задача, которую нужно получить.
+            team: Команда, к которой должна относиться задача.
+            user: Пользователь, выполняющий запрос.
+
+        Возвращает:
+            Task: Запрошенная задача.
+
+        Исключения:
+            AuthorizationError: Если пользователь не состоит в команде.
+            WrongInputError: Если задача не относится к указанной команде.
+            AuthorizationError: Если пользователь не является исполнителем задачи
+                или не имеет роль MANAGER.
+
+        Требования:
+            Пользователь должен состоять в команде team.
+            Задача должна принадлежать команде team.
+            Доступ разрешен исполнителю задачи или пользователю с ролью MANAGER.
+        """
+
         if not await self.team_repo.belongs_to_team(team.id, user.id):
             raise AuthorizationError(message="You are not allowed to do that.")
 
@@ -111,13 +163,34 @@ class TaskService:
 
         return task
     
-    async def update_task(
-        self, 
-        data: TaskUpdate,
-        task: Task,
-        user: User,
-        team: Team
-    ):
+    async def update_task(self, data: TaskUpdate, task: Task, user: User, team: Team):
+        """
+        Частично обновляет задачу.
+
+        Аргументы:
+            data: Данные для частичного обновления задачи.
+            task: Задача, которую нужно обновить.
+            user: Пользователь, выполняющий обновление.
+            team: Команда, к которой должна относиться задача.
+
+        Возвращает:
+            Task: Обновленная задача. Если изменений нет, возвращает текущую
+                задачу без выполнения обновления.
+
+        Исключения:
+            AuthorizationError: Если пользователь не состоит в команде.
+            WrongInputError: Если задача не относится к указанной команде.
+            AuthorizationError: Если пользователь не имеет роль MANAGER.
+
+        Требования:
+            Пользователь должен состоять в команде team.
+            Задача должна принадлежать команде team.
+            Изменять задачу может исполнитель задачи или пользователь с ролью MANAGER.
+
+        Побочные эффекты:
+            При наличии изменений обновляет задачу и выполняет commit сессии.
+        """
+
         changes = data.model_dump(exclude_unset=True)
 
         if not await self.team_repo.belongs_to_team(team.id, user.id):
@@ -136,12 +209,32 @@ class TaskService:
         await self.session.commit()
         return task
 
-    async def delete_task(
-        self,
-        task: Task,
-        user: User,
-        team: Team
-    ):
+    async def delete_task(self, task: Task, user: User, team: Team):
+        """
+        Удаляет задачу.
+
+        Аргументы:
+            task: Задача, которую нужно удалить.
+            user: Пользователь, выполняющий удаление.
+            team: Команда, к которой должна относиться задача.
+
+        Возвращает:
+            OperationSuccess: Результат успешной операции.
+
+        Исключения:
+            AuthorizationError: Если пользователь не состоит в команде.
+            WrongInputError: Если задача не относится к указанной команде.
+            AuthorizationError: Если пользователь не имеет роль MANAGER.
+
+        Требования:
+            Пользователь должен состоять в команде team.
+            Задача должна принадлежать команде team.
+            Удалять задачу может исполнитель задачи или пользователь с ролью MANAGER.
+
+        Побочные эффекты:
+            Удаляет задачу и выполняет commit сессии.
+        """
+
         if not await self.team_repo.belongs_to_team(team.id, user.id):
             raise AuthorizationError(message="You are not allowed to do that.")
 
