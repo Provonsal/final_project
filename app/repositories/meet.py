@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 
 from app.models.RoleEnum import RoleEnum
-from app.models.models import Meeting
+from app.models.models import Meeting, MeetingUser
 from app.repositories.crud_protocol import BaseRepo
 from app.models import User
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -42,4 +42,9 @@ class MeetingRepo(BaseRepo[Meeting]):
             )
         ).all()
 
-
+    async def belongs_to_meeting(self, meeting_id: uuid.UUID, user_id: uuid.UUID):
+        return (await self.session.scalar(
+            select(MeetingUser)
+            .where(MeetingUser.meeting_id == meeting_id)
+            .where(MeetingUser.user_id == user_id)
+        )) is not None
