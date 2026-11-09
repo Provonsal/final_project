@@ -32,9 +32,6 @@ class MeetingService:
     ):
         if not await self.team_repo.belongs_to_team(team.id, user.id):
             raise AuthorizationError(message="You are not allowed to do that.")
-
-        if user.role not in (RoleEnum.MANAGER, RoleEnum.MEMBER):
-            raise AuthorizationError(message="You are not allowed to do that.")
         
         return await self.meeting_repo.get_all_meetings(team.id)
     
@@ -47,7 +44,7 @@ class MeetingService:
         if not await self.team_repo.belongs_to_team(team.id, user.id):
             raise AuthorizationError(message="You are not allowed to do that.")
 
-        if user.role not in (RoleEnum.MANAGER, RoleEnum.MEMBER):
+        if not await self.meeting_repo.belongs_to_meeting(meeting.id, user.id):
             raise AuthorizationError(message="You are not allowed to do that.")
 
         if meeting.related_team != team.id:
@@ -67,7 +64,18 @@ class MeetingService:
 
         if user.role != RoleEnum.MANAGER:
             raise AuthorizationError(message="You are not allowed to do that.")
-        
+
+        if data.starts_at >= data.ends_at:
+            raise BusinessRuleError(message="Meeting start time must be before end time.")
+
+        if data.max_members <= 0:
+            raise BusinessRuleError(message="Meeting must allow at least one member.")
+
+        if data.max_members > team.max_per_team:
+            raise BusinessRuleError(message="Meeting max members cannot exceed team max members.")
+
+        if data.starts_at < datetime.now():
+            raise BusinessRuleError(message="Meeting start time cannot be in the past.")
 
         new_meeting = Meeting(
             starts_at=data.starts_at,
@@ -90,10 +98,10 @@ class MeetingService:
     ):
         changes = data.model_dump(exclude_unset=True)
 
-        if user.role != RoleEnum.MANAGER:
+        if not await self.team_repo.belongs_to_team(team.id, user.id):
             raise AuthorizationError(message="You are not allowed to do that.")
 
-        if not await self.team_repo.belongs_to_team(team.id, user.id):
+        if user.role != RoleEnum.MANAGER:
             raise AuthorizationError(message="You are not allowed to do that.")
 
         if meeting.related_team != team.id:
@@ -122,11 +130,14 @@ class MeetingService:
         if not await self.team_repo.belongs_to_team(team.id, user.id):
             raise AuthorizationError(message="You are not allowed to do that.")
 
-        if meeting.creator != user.id:
-            raise AuthorizationError(message="You do not have permission to delete this meeting.")
+        if user.role != RoleEnum.MANAGER:
+            raise AuthorizationError(message="You are not allowed to do that.")
 
         if meeting.related_team != team.id:
             raise WrongInputError(message="Meeting does not belong to the specified team.")
+
+        if meeting.creator != user.id:
+            raise AuthorizationError(message="You do not have permission to delete this meeting.")
         
         await self.meeting_repo.delete(meeting)
         await self.session.commit()
