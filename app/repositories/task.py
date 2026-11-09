@@ -22,4 +22,8 @@ class TaskRepo(BaseRepo[Task]):
 
     async def get_all_tasks(self, team_id: uuid.UUID):
         
-        return (await self.session.scalars(select(self.model).where(self.model.team_id == team_id))).all()
+        return (await self.session.scalars(select(self.model).where((self.model.team_id == team_id)))).all()
+
+    async def get_all_tasks_for_user(self, team_id: uuid.UUID, user_id: uuid.UUID):
+        
+        return (await self.session.scalars(select(self.model).where((self.model.team_id == team_id) & (self.model.assignee == user_id)))).all()
