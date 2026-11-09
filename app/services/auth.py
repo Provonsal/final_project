@@ -20,6 +20,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import NoResultFound
 
+from app.exc.exceptions import AuthorizationError, WrongInputError
 from app.models import RoleEnum
 from app.models.models import RefreshToken
 from app.repositories.refresh_token import RefreshTokenRepo
@@ -46,7 +47,7 @@ class AuthService:
         try:
             user = await self.user_repo.get_by_login(form_data.username)
         except NoResultFound:
-            raise ValueError("Неверный email или пароль")
+            raise WrongInputError(message="Неверный email или пароль")
 
         is_correct_pwd = PWDManager.verify_password(form_data.password, user.user_credentials.salt, user.user_credentials.password_hash)
 
@@ -89,7 +90,7 @@ class AuthService:
                 refresh_token=refresh_token
             )
         else:
-            raise ValueError("Неверный email или пароль")
+            raise WrongInputError(message="Неверный email или пароль")
 
     async def refresh(self, refresh_data: RefreshTokenSchema):
         try:
@@ -97,63 +98,55 @@ class AuthService:
             
             # Проверяем, что это refresh токен
             if payload.get("type") != "refresh":
-                raise HTTPException(
-                    status_code=401,
-                    detail="Invalid token type"
+                raise WrongInputError(
+                    message="Invalid token type"
                 )
             
             user_id = payload.get("sub")
 
             if user_id is None:
-                raise HTTPException(
-                    status_code=401,
-                    detail="Invalid token"
+                raise WrongInputError(
+                    message="Invalid token"
                 )
             
             try:
                 user = await self.user_repo.get_by_id(user_id)
             except:
-                raise HTTPException(
-                    status_code=401,
-                    detail="User not found"
+                raise WrongInputError(
+                    message="User not found"
                 )
 
             if not user.is_active:
-                raise HTTPException(
-                    status_code=401,
-                    detail="User is not active"
+                raise WrongInputError(
+                    message="User is not active"
                 )
             
             expire_time = payload.get("exp")
 
             if expire_time is not None:
                 if datetime.datetime.fromtimestamp(expire_time, datetime.UTC) < datetime.datetime.now(datetime.UTC):
-                    raise HTTPException(
-                        status_code=401,
-                        detail="Token expired. Log in again please"
+                    raise AuthorizationError(
+                        message="Token expired. Log in again please"
                     )
             else:
-                raise HTTPException(
-                    status_code=401,
-                    detail="Invalid token"
+                raise WrongInputError(
+                    message="Invalid token"
                 )
 
             try:
                 ref_db_token = await self.refresh_repo.get_by_hash(refresh_data.refresh_token)
 
             except:
-                raise HTTPException(
-                    status_code=401,
-                    detail="Invalid refresh token"
+                raise WrongInputError(
+                    message="Invalid refresh token"
                 )
 
             if ref_db_token.revoked:
                 
                 await self.refresh_repo.update_revoke_all_family(ref_db_token.family_id)
 
-                raise HTTPException(
-                    status_code=401,
-                    detail="Revoked token. Log in again please."
+                raise AuthorizationError(
+                    message="Revoked token. Log in again please."
                 )
 
             role = user.role
@@ -192,7 +185,6 @@ class AuthService:
             
 
         except Exception:
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid refresh token"
+            raise WrongInputError(
+                message="Invalid refresh token"
             )

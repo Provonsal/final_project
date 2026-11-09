@@ -18,7 +18,7 @@ async def create_meetings(
     meeting_service_dep: MeetingServiceDep,
     data: MeetingCreate
 ): 
-    await meeting_service_dep.create_meeting(data, team, user)
+    return await meeting_service_dep.create_meeting(data, team, user)
         
 
 @router.get("")
@@ -56,4 +56,4 @@ async def delete_meetings(
     meeting: MeetingDep,
     meeting_service_dep: MeetingServiceDep,
 ):
-    await meeting_service_dep.delete(meeting, team, user)
+    return await meeting_service_dep.delete(meeting, team, user)

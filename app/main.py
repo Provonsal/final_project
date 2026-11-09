@@ -2,10 +2,13 @@ from contextlib import asynccontextmanager
 import os
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
+from app.exc.exceptions import AppException
+from app.exc.handlers import app_exception_handler, http_exception_handler, unhandled_exception_handler, validation_exception_handler
 from utils.init_check_ups import check_db_config
 from .routers.api.api_router import router as api_router
 from starlette.middleware.sessions import SessionMiddleware
@@ -38,6 +41,11 @@ app.include_router(evaluations.router, prefix="/views/teams",    tags=["views-ev
 app.include_router(calendar.router,    prefix="/views/calendar", tags=["views-calendar"])
 app.include_router(users.router,       prefix="/views/users",    tags=["views-users"])
 app.include_router(api_router)
+
+app.add_exception_handler(AppException, app_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(HTTPException, http_exception_handler)
+app.add_exception_handler(Exception, unhandled_exception_handler)
 
 @app.get("/views")
 @app.get("/views/")

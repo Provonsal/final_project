@@ -29,6 +29,6 @@ class CommentRepo(BaseRepo[Comment]):
                     self.model.task_id == task_id
                 )
             )
-        )
+        ).all()
 
 

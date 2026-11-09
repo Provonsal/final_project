@@ -7,12 +7,14 @@ import uuid
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.exc.exceptions import AuthorizationError
 from app.models import RoleEnum
 from app.models.models import Comment, Task, Team, User
 from app.repositories.commentary import CommentRepo
 from app.repositories.team import TeamRepo
 from app.schemas.create_comment import CommentCreate
 from app.schemas.update_comment import CommentUpdate
+from app.schemas.success import OperationSuccess
 
 def requires_access(method):
     """Проверяет доступ по параметрам user/team (и task, если он есть)."""
@@ -45,12 +47,12 @@ class CommentService:
         self, user: User, team: Team, task: Task | None = None
     ) -> None:
         if user.role not in (RoleEnum.MANAGER, RoleEnum.MEMBER):
-            raise HTTPException(403, "You are not allowed to do that.")
-        if not await self.team_repo.belongs_to_team(user.id, team.id):
-            raise HTTPException(403, "You are not allowed to do that.")
+            raise AuthorizationError(message="You are not allowed to do that. role")
+        if not await self.team_repo.belongs_to_team(team.id, user.id):
+            raise AuthorizationError(message="You are not allowed to do that. not belonging")
         if task is not None and task.team_id != team.id:
-            raise HTTPException(403, "You are not allowed to do that.")
-
+            raise AuthorizationError(message="You are not allowed to do that. wrong team")
+    
     @requires_access    
     async def get_comments(
         self, 
@@ -83,6 +85,7 @@ class CommentService:
 
         new_comment = Comment(**data.model_dump(), user=user, task=task)
         await self.comment_repo.create(new_comment)
+        await self.session.commit()
         return new_comment
 
     @requires_access   
@@ -99,7 +102,10 @@ class CommentService:
         if not changes:
             return comment
 
-        return await self.comment_repo.update(comment.id, changes)
+        updated_comment = await self.comment_repo.update(comment.id, changes)
+        await self.session.commit()
+
+        return updated_comment
 
     @requires_access
     async def delete(
@@ -111,3 +117,5 @@ class CommentService:
     ):
 
         await self.comment_repo.delete(comment)
+        await self.session.commit()
+        return OperationSuccess()

@@ -6,6 +6,7 @@ import uuid
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.exc.exceptions import AuthorizationError
 from app.models import RoleEnum
 from app.models.models import Meeting, Task, Team, TeamInviteCode, TeamUser, User
 from app.repositories.meet import MeetingRepo
@@ -47,13 +48,13 @@ class CalendarService:
         self, user: User, team: Team, task: Task | None = None
     ) -> None:
         if user.role not in (RoleEnum.MANAGER, RoleEnum.MEMBER):
-            raise HTTPException(403, "You are not allowed to do that.")
-        if not await self.team_repo.belongs_to_team(user.id, team.id):
-            raise HTTPException(403, "You are not allowed to do that.")
+            raise AuthorizationError(message="You are not allowed to do that.")
+        if not await self.team_repo.belongs_to_team(team.id, user.id):
+            raise AuthorizationError(message="You are not allowed to do that.")
         if task is not None:
 
             if task.team_id != team.id:
-                raise HTTPException(403, "You are not allowed to do that.")
+                AuthorizationError(message="You are not allowed to do that.")
             
             
     @requires_access

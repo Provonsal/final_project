@@ -17,17 +17,18 @@ async def write_evaluation(
     team: TeamDep
 ):
     
-    await evaluation_service_dep.create_evaluation(evaluation_data, user, team, task)
+    return await evaluation_service_dep.create_evaluation(evaluation_data, user, team, task)
 
 @router.get("")
 async def read_evaluation(
     evaluation_service_dep: EvaluationServiceDep,
     task: TaskDep,
     user: MemberOrManagerDep,
-    team: TeamDep
+    team: TeamDep,
+    evaluation: EvaluationDep
 ): 
     
-    return await evaluation_service_dep.get_evaluation(user, team, task)
+    return await evaluation_service_dep.get_evaluation(user, team, task, evaluation)
 
 @router.patch("/{evaluation_id}")
 async def edit_evaluation(

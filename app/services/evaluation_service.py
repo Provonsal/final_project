@@ -6,6 +6,7 @@ import uuid
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.exc.exceptions import AuthorizationError
 from app.models import RoleEnum, TaskStatusEnum
 from app.models.models import Comment, Task, TaskRate, Team, User
 from app.repositories.commentary import CommentRepo
@@ -13,6 +14,7 @@ from app.repositories.evaluation import EvaluationRepo
 from app.repositories.team import TeamRepo
 from app.schemas.create_comment import CommentCreate
 from app.schemas.create_evaluation import EvaluationCreate
+from app.schemas.success import OperationSuccess
 from app.schemas.update_comment import CommentUpdate
 from app.schemas.update_evaluation import EvaluationUpdate
 from sqlalchemy.exc import NoResultFound
@@ -48,16 +50,15 @@ class EvaluationService:
         self, user: User, team: Team, task: Task | None = None
     ) -> None:
         if user.role not in (RoleEnum.MANAGER, RoleEnum.MEMBER):
-            raise HTTPException(403, "You are not allowed to do that.")
+            raise AuthorizationError(message="You are not allowed to do that.")
         if not await self.team_repo.belongs_to_team(team.id, user.id):
-            raise HTTPException(403, "You are not allowed to do that.")
+            raise AuthorizationError(message="You are not allowed to do that.")
         if task is not None:
 
             if task.team_id != team.id:
-                raise HTTPException(403, "You are not allowed to do that.")
+                raise AuthorizationError(message="You are not allowed to do that.")
             
-            if task.status != TaskStatusEnum.DONE:
-                raise HTTPException(status_code=400, detail="Task is not completed yet.")
+            
 
     @requires_access
     async def get_evaluation(
@@ -65,12 +66,10 @@ class EvaluationService:
         user: User,
         team: Team,
         task: Task,
+        evaluation: TaskRate
     ):
 
-        try:
-            evaluation = await self.evaluation_repo.get_evaluation_for_task(task.id)
-        except NoResultFound:
-            raise HTTPException(status_code=404, detail="Evaluation not found.")
+        
         
         return evaluation
 
@@ -82,7 +81,7 @@ class EvaluationService:
         team: Team,
         task: Task,
     ):
-        new_evaluation = TaskRate(**data.model_dump())
+        new_evaluation = TaskRate(**data.model_dump(), user=user, task=task)
         await self.evaluation_repo.create(new_evaluation)
         return new_evaluation
 
@@ -110,3 +109,4 @@ class EvaluationService:
         evaluation: TaskRate
     ):
         await self.evaluation_repo.delete(evaluation)
+        return OperationSuccess()

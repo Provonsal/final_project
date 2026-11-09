@@ -41,7 +41,7 @@ async def update_tasks(
     task_service_dep: TaskServiceDep,
     data: TaskUpdate
 ):
-    await task_service_dep.update_task(data, task, user, team)
+    return await task_service_dep.update_task(data, task, user, team)
 
 @router.delete("/{task_id}")
 async def delete_tasks(
@@ -50,4 +50,4 @@ async def delete_tasks(
     task: TaskDep,
     task_service_dep: TaskServiceDep
 ):
-    await task_service_dep.delete_task(task, user, team)
+    return await task_service_dep.delete_task(task, user, team)

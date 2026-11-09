@@ -7,6 +7,7 @@ from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
+from app.exc.exceptions import NotFoundError
 from app.models import RoleEnum
 from app.models.models import Comment, Meeting, Task, TaskRate, Team, User
 from app.repositories.commentary import CommentRepo
@@ -121,17 +122,27 @@ async def get_team(
     team_id: UUID,
     session: db_dependency,
 ):
-    
-    return await TeamRepo(session).get_by_id(team_id)
+    try:
+        team = await TeamRepo(session).get_by_id(team_id)
+    except:
+        raise NotFoundError(
+            resource="Team",
+            resource_id=team_id
+        )
+    return team
 
 
 async def get_task(
     task_id: UUID,
     session: db_dependency,
 ):
-    
-    task = await TaskRepo(session).get_by_id(task_id)
-    
+    try:
+        task = await TaskRepo(session).get_by_id(task_id)
+    except:
+        raise NotFoundError(
+            resource="Task",
+            resource_id=task_id
+        )
     return task
 
 
@@ -139,27 +150,39 @@ async def get_comment(
     comment_id: UUID,
     session: db_dependency
 ):
-    
-    comment = await CommentRepo(session).get_by_id(comment_id)
-    
+    try:
+        comment = await CommentRepo(session).get_by_id(comment_id)
+    except:
+        raise NotFoundError(
+            resource="Comment",
+            resource_id=comment_id
+        )
     return comment
 
 async def get_evaluation(
     task_id: UUID,
     session: db_dependency
 ):
-    
-    evaluation = await EvaluationRepo(session).get_evaluation_for_task(task_id)
-    
+    try:
+        evaluation = await EvaluationRepo(session).get_evaluation_for_task(task_id)
+    except:
+        raise NotFoundError(
+            resource="Evaluation",
+            resource_id=task_id
+        )
     return evaluation
 
 async def get_meeting(
     meeting_id: UUID,
     session: db_dependency
 ):
-    
-    meeting = await MeetingRepo(session).get_by_id(meeting_id)
-    
+    try:
+        meeting = await MeetingRepo(session).get_by_id(meeting_id)
+    except:
+        raise NotFoundError(
+            resource="Meeting",
+            resource_id=meeting_id
+        )
     return meeting
 
 CurrentUserDep = Annotated[User, Depends(get_current_user)]

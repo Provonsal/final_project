@@ -8,6 +8,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import NoResultFound
 
+from app.exc.exceptions import WrongInputError
 from app.models.RoleEnum import RoleEnum
 from app.models.models import User, UserCredentials
 
@@ -31,7 +32,7 @@ class UserService:
     async def register(self, user: UserRegister):
         try:
             await self.user_repo.get_by_login(user.username)
-            raise HTTPException(status_code=400, detail="User with this email already exists")
+            raise WrongInputError(message="User with this email already exists")
         except NoResultFound:
             pass
 
