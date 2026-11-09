@@ -95,38 +95,35 @@ class TaskService:
 
     async def get_all_tasks(self, team: Team, user: User):
         """
-        Возвращает все задачи команды.
+        Возвращает задачи команды с учетом роли пользователя.
 
         Аргументы:
             team: Команда, задачи которой запрашиваются.
             user: Пользователь, выполняющий запрос.
 
         Возвращает:
-            list[Task]: Список задач команды.
+            list[Task]: Список задач команды. Для MANAGER — все задачи команды,
+                для остальных ролей — только задачи, назначенные на пользователя.
 
         Исключения:
             AuthorizationError: Если пользователь не состоит в команде.
-            NotFoundError: Если для команды не найдено ни одной задачи.
 
         Требования:
             Пользователь должен состоять в команде team.
+
+        Поведение:
+            MANAGER получает все задачи команды (task_repo.get_all_tasks),
+            остальные — только собственные (task_repo.get_all_tasks_for_user).
         """
         
         if not await self.team_repo.belongs_to_team(team.id, user.id):
             raise AuthorizationError(message="You are not allowed to do that.")
 
-        if user.role != RoleEnum.MANAGER:
-            try:
-                tasks = await self.task_repo.get_all_tasks_for_user(team.id, user.id)
-            except NoResultFound:
-                raise NotFoundError("Task", f"No tasks found for user with id {user.id}.")
+        if user.role == RoleEnum.MANAGER:
+            return await self.task_repo.get_all_tasks(team.id)
         else:
-            try:
-                tasks = await self.task_repo.get_all_tasks(team.id)
-            except NoResultFound:
-                raise NotFoundError("Task", f"No tasks found for team id {team.id}.")
+            return await self.task_repo.get_all_tasks_for_user(team.id, user.id)
 
-        return tasks
 
     async def get_task(self, task: Task, team: Team, user: User):
         """
