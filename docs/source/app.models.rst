@@ -50,5 +50,6 @@ Module contents
 .. automodule:: app.models
    :no-members:
    :no-inherited-members:
+   :exclude-members: User, Team, Task, Comment, Meeting, RefreshToken, TeamUser, MeetingUser, TeamInviteCode, UserCredentials, TaskRate, Base, RateEnum, RoleEnum, TaskStatusEnum
    :show-inheritance:
    :undoc-members:

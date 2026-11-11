@@ -67,9 +67,9 @@ class MeetingService:
 
         Требования:
             Пользователь должен состоять в команде team.
-            Пользователь должен быть участником встречи
-                (meeting_repo.belongs_to_meeting(meeting.id, user.id)).
+            Пользователь должен быть участником встречи (meeting_repo.belongs_to_meeting(meeting.id, user.id)).
             Встреча должна принадлежать команде team.
+
         """
 
         if not await self.team_repo.belongs_to_team(team.id, user.id):
