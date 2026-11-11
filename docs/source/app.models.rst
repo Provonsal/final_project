@@ -44,12 +44,3 @@ app.models.models module
    :show-inheritance:
    :undoc-members:
 
-Module contents
----------------
-
-.. automodule:: app.models
-   :no-members:
-   :no-inherited-members:
-   :ignore-module-all:
-   :show-inheritance:
-   :undoc-members:
