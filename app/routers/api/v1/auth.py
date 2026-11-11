@@ -19,23 +19,15 @@ async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()], 
     auth_service: AuthServiceDep
 ):
-    try:
-        return await auth_service.login(form_data)
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail="Неверный email или пароль"
-        )
+    
+    return await auth_service.login(form_data)
+    
 
 @router.post("/register")
 async def register(
     user: Annotated[UserRegister, Depends(UserRegister.as_form)],
     user_service: UserServiceDep,
 ):
-    try:
-        return await user_service.register(user)
-    except ValueError:
-        raise HTTPException(
-            status_code=400,
-            detail="Пользователь с таким email уже существует.",
-        )
+    
+    return await user_service.register(user)
+    
