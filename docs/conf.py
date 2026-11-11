@@ -55,6 +55,7 @@ autodoc_default_options = {
     "members": True,
     "undoc-members": True,
     "show-inheritance": True,
+    "ignore-module-all": True, 
 }
 
 # Не тянем реальную БД при импорте (на случай, если env не задан)
