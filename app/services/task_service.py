@@ -155,7 +155,7 @@ class TaskService:
         if task.team_id != team.id:
             raise WrongInputError(message="Task does not belong to the specified team.")
 
-        if task.assignee != user.id or user.role != RoleEnum.MANAGER:
+        if task.assignee != user.id and user.role != RoleEnum.MANAGER:
             raise AuthorizationError(message="You are not allowed to do that.")
 
         return task

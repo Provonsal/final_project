@@ -66,10 +66,10 @@ class TeamService:
             Пользователь должен состоять в команде team.
         """
 
-        if user.role not in (RoleEnum.MANAGER, RoleEnum.MEMBER):
+        if not await self.team_repo.belongs_to_team(team.id, user.id):
             raise AuthorizationError(message="You are not allowed to do that.")
 
-        if not await self.team_repo.belongs_to_team(team.id, user.id):
+        if user.role not in (RoleEnum.MANAGER, RoleEnum.MEMBER):
             raise AuthorizationError(message="You are not allowed to do that.")
         
         members_list = await self.team_repo.get_team_users(team.id)
@@ -173,9 +173,6 @@ class TeamService:
         """
 
         if not await self.team_repo.belongs_to_team(team.id, user.id):
-            raise AuthorizationError(message="You are not allowed to do that.")
-
-        if team.owner != user.id and user.role != RoleEnum.MANAGER:
             raise AuthorizationError(message="You are not allowed to do that.")
         
         return team

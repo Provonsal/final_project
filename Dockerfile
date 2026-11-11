@@ -19,6 +19,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=builder /root/.local /root/.local
 COPY app/ app/
+COPY utils/ utils/
+COPY alembic.ini .
+COPY alembic/ alembic/
 
 ENV PATH=/root/.local/bin:$PATH \
     PYTHONDONTWRITEBYTECODE=1 \

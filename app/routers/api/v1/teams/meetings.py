@@ -4,7 +4,7 @@
 
 from fastapi import APIRouter
 
-from app.dependencies import ManagerDep, MeetingDep, MeetingServiceDep, TeamDep
+from app.dependencies import ManagerDep, MeetingDep, MeetingServiceDep, MemberOrManagerDep, TeamDep
 from app.schemas.create_meeting import MeetingCreate
 from app.schemas.update_meeting import MeetingUpdate
 
@@ -24,7 +24,7 @@ async def create_meetings(
 @router.get("")
 async def read_meetings(
     team: TeamDep,
-    user: ManagerDep,
+    user: MemberOrManagerDep,
     meeting_service_dep: MeetingServiceDep,
 ):
     return await meeting_service_dep.get_meetings(team, user)
@@ -32,7 +32,7 @@ async def read_meetings(
 @router.get("/{meeting_id}")
 async def read_meeting(
     team: TeamDep,
-    user: ManagerDep,
+    user: MemberOrManagerDep,
     meeting: MeetingDep,
     meeting_service_dep: MeetingServiceDep,
 ): 
