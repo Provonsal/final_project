@@ -1,0 +1,77 @@
+services package
+================
+
+Submodules
+----------
+
+services.auth module
+--------------------
+
+.. automodule:: services.auth
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+services.calendar\_service module
+---------------------------------
+
+.. automodule:: services.calendar_service
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+services.comment\_service module
+--------------------------------
+
+.. automodule:: services.comment_service
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+services.evaluation\_service module
+-----------------------------------
+
+.. automodule:: services.evaluation_service
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+services.meeting\_service module
+--------------------------------
+
+.. automodule:: services.meeting_service
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+services.task\_service module
+-----------------------------
+
+.. automodule:: services.task_service
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+services.team\_service module
+-----------------------------
+
+.. automodule:: services.team_service
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+services.user\_service module
+-----------------------------
+
+.. automodule:: services.user_service
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Module contents
+---------------
+
+.. automodule:: services
+   :members:
+   :show-inheritance:
+   :undoc-members:

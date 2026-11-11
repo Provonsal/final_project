@@ -1,0 +1,231 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.services.user_service &mdash; Employees control system 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Employees control system
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Employees control system</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.services.user_service</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.services.user_service</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span><span class="p">,</span> <span class="n">uuid4</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Response</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.security</span><span class="w"> </span><span class="kn">import</span> <span class="n">OAuth2PasswordRequestForm</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.ext.asyncio</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncSession</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.exc</span><span class="w"> </span><span class="kn">import</span> <span class="n">NoResultFound</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.exc.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">WrongInputError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.RoleEnum</span><span class="w"> </span><span class="kn">import</span> <span class="n">RoleEnum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span><span class="p">,</span> <span class="n">UserCredentials</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.repositories.refresh_token</span><span class="w"> </span><span class="kn">import</span> <span class="n">RefreshTokenRepo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.repositories.user</span><span class="w"> </span><span class="kn">import</span> <span class="n">UserRepo</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.user_me</span><span class="w"> </span><span class="kn">import</span> <span class="n">UserMeResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.user_register</span><span class="w"> </span><span class="kn">import</span> <span class="n">UserRegister</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.user_response</span><span class="w"> </span><span class="kn">import</span> <span class="n">UserResponse</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">utils.password_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">PWDManager</span>
+
+
+<div class="viewcode-block" id="UserService">
+<a class="viewcode-back" href="../../../source/app.services.html#app.services.user_service.UserService">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">UserService</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Бизнес-логика для работы с пользователями."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">AsyncSession</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">session</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user_repo</span> <span class="o">=</span> <span class="n">UserRepo</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+
+<div class="viewcode-block" id="UserService.register">
+<a class="viewcode-back" href="../../../source/app.services.html#app.services.user_service.UserService.register">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">:</span> <span class="n">UserRegister</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Регистрирует нового пользователя.</span>
+
+<span class="sd">        Аргументы:</span>
+<span class="sd">            user: Данные для регистрации (username, name, password, role).</span>
+
+<span class="sd">        Возвращает:</span>
+<span class="sd">            UserResponse: Ответ с логином, сообщением об успешной регистрации</span>
+<span class="sd">                и ролью созданного пользователя.</span>
+
+<span class="sd">        Исключения:</span>
+<span class="sd">            WrongInputError: Если пользователь с таким логином уже существует.</span>
+
+<span class="sd">        Требования:</span>
+<span class="sd">            Логин (user.username) должен быть уникальным.</span>
+
+<span class="sd">        Поведение:</span>
+<span class="sd">            Если роль не передана (user.role is None), назначается RoleEnum.GUEST.</span>
+<span class="sd">            Для пароля генерируются соль и хеш через PWDManager.</span>
+<span class="sd">            Создаются записи User и UserCredentials.</span>
+
+<span class="sd">        Побочные эффекты:</span>
+<span class="sd">            Создает пользователя и его учетные данные, выполняет commit сессии.</span>
+<span class="sd">        """</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_repo</span><span class="o">.</span><span class="n">get_by_login</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">WrongInputError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">"User with this login already exists"</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">NoResultFound</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="n">role</span> <span class="o">=</span> <span class="n">RoleEnum</span><span class="o">.</span><span class="n">GUEST</span> <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">role</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">user</span><span class="o">.</span><span class="n">role</span>
+
+        <span class="n">salt</span><span class="p">,</span> <span class="n">hash_pwd</span> <span class="o">=</span> <span class="n">PWDManager</span><span class="o">.</span><span class="n">create_credentials</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">password</span><span class="p">)</span>
+                
+        <span class="n">new_user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span>
+            <span class="n">email</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="n">role</span>
+        <span class="p">)</span>
+
+        <span class="n">new_user_creds</span> <span class="o">=</span> <span class="n">UserCredentials</span><span class="p">(</span>
+            <span class="n">user</span><span class="o">=</span><span class="n">new_user</span><span class="p">,</span>
+            <span class="n">salt</span><span class="o">=</span><span class="n">salt</span><span class="p">,</span>
+            <span class="n">password_hash</span><span class="o">=</span><span class="n">hash_pwd</span>
+        <span class="p">)</span>
+
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_repo</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">new_user</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_repo</span><span class="o">.</span><span class="n">create_creds</span><span class="p">(</span><span class="n">new_user_creds</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">UserResponse</span><span class="p">(</span>
+            <span class="n">login</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+            <span class="n">message</span><span class="o">=</span><span class="s2">"Регистрация успешна"</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="n">role</span><span class="o">.</span><span class="n">value</span>
+        <span class="p">)</span></div>
+
+        
+
+<div class="viewcode-block" id="UserService.me">
+<a class="viewcode-back" href="../../../source/app.services.html#app.services.user_service.UserService.me">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">me</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Возвращает профиль текущего пользователя.</span>
+
+<span class="sd">        Аргументы:</span>
+<span class="sd">            current_user: Аутентифицированный пользователь.</span>
+
+<span class="sd">        Возвращает:</span>
+<span class="sd">            UserMeResponse: Данные текущего пользователя (id, username, role).</span>
+<span class="sd">        """</span>
+        
+        <span class="k">return</span> <span class="n">UserMeResponse</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span><span class="n">username</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">email</span><span class="p">,</span> <span class="n">role</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">role</span><span class="o">.</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UserService.get_user">
+<a class="viewcode-back" href="../../../source/app.services.html#app.services.user_service.UserService.get_user">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Возвращает пользователя по его идентификатору.</span>
+
+<span class="sd">        Аргументы:</span>
+<span class="sd">            user_id: UUID пользователя.</span>
+
+<span class="sd">        Возвращает:</span>
+<span class="sd">            User: Найденный пользователь, полученный из UserRepo.get_by_id.</span>
+
+<span class="sd">        Исключения:</span>
+<span class="sd">            NoResultFound: Если пользователь с указанным ID не найден</span>
+<span class="sd">                (пробрасывается из репозитория).</span>
+<span class="sd">        """</span>
+
+        <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_repo</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span></div>
+</div>
+
+        
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Provonsal.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,109 @@
+views package
+=============
+
+Submodules
+----------
+
+views.api\_client module
+------------------------
+
+.. automodule:: views.api_client
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+views.auth module
+-----------------
+
+.. automodule:: views.auth
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+views.calendar module
+---------------------
+
+.. automodule:: views.calendar
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+views.comments module
+---------------------
+
+.. automodule:: views.comments
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+views.evaluations module
+------------------------
+
+.. automodule:: views.evaluations
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+views.meetings module
+---------------------
+
+.. automodule:: views.meetings
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+views.permissions module
+------------------------
+
+.. automodule:: views.permissions
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+views.policy module
+-------------------
+
+.. automodule:: views.policy
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+views.tasks module
+------------------
+
+.. automodule:: views.tasks
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+views.teams module
+------------------
+
+.. automodule:: views.teams
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+views.templates module
+----------------------
+
+.. automodule:: views.templates
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+views.users module
+------------------
+
+.. automodule:: views.users
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Module contents
+---------------
+
+.. automodule:: views
+   :members:
+   :show-inheritance:
+   :undoc-members:

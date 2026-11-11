@@ -1,0 +1,53 @@
+models package
+==============
+
+Submodules
+----------
+
+models.RateEnum module
+----------------------
+
+.. automodule:: models.RateEnum
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+models.RoleEnum module
+----------------------
+
+.. automodule:: models.RoleEnum
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+models.TaskStatusEnum module
+----------------------------
+
+.. automodule:: models.TaskStatusEnum
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+models.base module
+------------------
+
+.. automodule:: models.base
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+models.models module
+--------------------
+
+.. automodule:: models.models
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Module contents
+---------------
+
+.. automodule:: models
+   :members:
+   :show-inheritance:
+   :undoc-members:

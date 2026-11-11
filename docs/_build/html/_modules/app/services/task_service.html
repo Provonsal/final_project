@@ -1,0 +1,364 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.services.task_service &mdash; Employees control system 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Employees control system
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Employees control system</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.services.task_service</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.services.task_service</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPException</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.ext.asyncio</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncSession</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.exc</span><span class="w"> </span><span class="kn">import</span> <span class="n">NoResultFound</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.exc.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">AuthorizationError</span><span class="p">,</span> <span class="n">NotFoundError</span><span class="p">,</span> <span class="n">WrongInputError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">RateEnum</span><span class="p">,</span> <span class="n">RoleEnum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.TaskStatusEnum</span><span class="w"> </span><span class="kn">import</span> <span class="n">TaskStatusEnum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Task</span><span class="p">,</span> <span class="n">TaskRate</span><span class="p">,</span> <span class="n">Team</span><span class="p">,</span> <span class="n">TeamInviteCode</span><span class="p">,</span> <span class="n">TeamUser</span><span class="p">,</span> <span class="n">User</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.repositories.evaluation</span><span class="w"> </span><span class="kn">import</span> <span class="n">EvaluationRepo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.repositories.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">TaskRepo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.repositories.team</span><span class="w"> </span><span class="kn">import</span> <span class="n">TeamRepo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.repositories.team_invite_code</span><span class="w"> </span><span class="kn">import</span> <span class="n">TeamInviteCodeRepo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.repositories.user</span><span class="w"> </span><span class="kn">import</span> <span class="n">UserRepo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.success</span><span class="w"> </span><span class="kn">import</span> <span class="n">OperationSuccess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.task_create</span><span class="w"> </span><span class="kn">import</span> <span class="n">TaskCreate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.task_update</span><span class="w"> </span><span class="kn">import</span> <span class="n">TaskUpdate</span>
+
+
+<div class="viewcode-block" id="TaskService">
+<a class="viewcode-back" href="../../../source/app.services.html#app.services.task_service.TaskService">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TaskService</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Бизнес-логика для работы с задачами."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">AsyncSession</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">session</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">team_repo</span> <span class="o">=</span> <span class="n">TeamRepo</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_repo</span> <span class="o">=</span> <span class="n">TaskRepo</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user_repo</span> <span class="o">=</span> <span class="n">UserRepo</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaluation_repo</span> <span class="o">=</span> <span class="n">EvaluationRepo</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TaskService.create_task">
+<a class="viewcode-back" href="../../../source/app.services.html#app.services.task_service.TaskService.create_task">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">TaskCreate</span><span class="p">,</span> <span class="n">team</span><span class="p">:</span> <span class="n">Team</span><span class="p">,</span> <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Создает задачу в команде и назначает ее участнику команды.</span>
+
+<span class="sd">        Аргументы:</span>
+<span class="sd">            data: Данные для создания задачи (title, description, assignee,</span>
+<span class="sd">                due_date, status).</span>
+<span class="sd">            team: Команда, в которой создается задача.</span>
+<span class="sd">            user: Пользователь, выполняющий создание задачи.</span>
+
+<span class="sd">        Возвращает:</span>
+<span class="sd">            Task: Созданная задача.</span>
+
+<span class="sd">        Исключения:</span>
+<span class="sd">            AuthorizationError: Если пользователь не состоит в команде.</span>
+<span class="sd">            AuthorizationError: Если assignee не состоит в команде.</span>
+<span class="sd">            AuthorizationError: Если пользователь не имеет роли manager.</span>
+
+<span class="sd">        Требования:</span>
+<span class="sd">            Пользователь должен состоять в команде team.</span>
+<span class="sd">            Assignee (data.assignee) должен состоять в команде team.</span>
+
+<span class="sd">        Поведение:</span>
+<span class="sd">            Задача создается с указанным assignee в качестве исполнителя.</span>
+<span class="sd">            Для задачи создается оценка TaskRate со значением RateEnum.UNRATED.</span>
+
+<span class="sd">        Побочные эффекты:</span>
+<span class="sd">            Создает задачу, создает запись оценки и выполняет commit сессии.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">team_repo</span><span class="o">.</span><span class="n">belongs_to_team</span><span class="p">(</span><span class="n">team</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">AuthorizationError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">"You are not allowed to do that."</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">team_repo</span><span class="o">.</span><span class="n">belongs_to_team</span><span class="p">(</span><span class="n">team</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">assignee</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">AuthorizationError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">"Assignee is not a member of the team."</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">role</span> <span class="o">!=</span> <span class="n">RoleEnum</span><span class="o">.</span><span class="n">MANAGER</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">AuthorizationError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">"You are not allowed to do that."</span><span class="p">)</span>
+
+        <span class="n">assignee_user</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_repo</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">assignee</span><span class="p">)</span>
+        
+        <span class="n">new_task</span> <span class="o">=</span> <span class="n">Task</span><span class="p">(</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">user</span><span class="o">=</span><span class="n">assignee_user</span><span class="p">,</span>
+            <span class="n">due_date</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">due_date</span><span class="p">,</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+            <span class="n">team</span><span class="o">=</span><span class="n">team</span>
+        <span class="p">)</span>
+
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_repo</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">new_task</span><span class="p">)</span>
+
+        <span class="n">unrated_rate</span> <span class="o">=</span> <span class="n">TaskRate</span><span class="p">(</span>
+            <span class="n">user</span><span class="o">=</span><span class="n">assignee_user</span><span class="p">,</span>
+            <span class="n">task</span><span class="o">=</span><span class="n">new_task</span><span class="p">,</span>
+            <span class="n">rate</span><span class="o">=</span><span class="n">RateEnum</span><span class="o">.</span><span class="n">UNRATED</span>
+        <span class="p">)</span>
+
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluation_repo</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">unrated_rate</span><span class="p">)</span>
+
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">new_task</span></div>
+
+
+<div class="viewcode-block" id="TaskService.get_all_tasks">
+<a class="viewcode-back" href="../../../source/app.services.html#app.services.task_service.TaskService.get_all_tasks">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_all_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">team</span><span class="p">:</span> <span class="n">Team</span><span class="p">,</span> <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Возвращает задачи команды с учетом роли пользователя.</span>
+
+<span class="sd">        Аргументы:</span>
+<span class="sd">            team: Команда, задачи которой запрашиваются.</span>
+<span class="sd">            user: Пользователь, выполняющий запрос.</span>
+
+<span class="sd">        Возвращает:</span>
+<span class="sd">            list[Task]: Список задач команды. Для MANAGER — все задачи команды,</span>
+<span class="sd">                для остальных ролей — только задачи, назначенные на пользователя.</span>
+
+<span class="sd">        Исключения:</span>
+<span class="sd">            AuthorizationError: Если пользователь не состоит в команде.</span>
+
+<span class="sd">        Требования:</span>
+<span class="sd">            Пользователь должен состоять в команде team.</span>
+
+<span class="sd">        Поведение:</span>
+<span class="sd">            MANAGER получает все задачи команды (task_repo.get_all_tasks),</span>
+<span class="sd">            остальные — только собственные (task_repo.get_all_tasks_for_user).</span>
+<span class="sd">        """</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">team_repo</span><span class="o">.</span><span class="n">belongs_to_team</span><span class="p">(</span><span class="n">team</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">AuthorizationError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">"You are not allowed to do that."</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">role</span> <span class="o">==</span> <span class="n">RoleEnum</span><span class="o">.</span><span class="n">MANAGER</span><span class="p">:</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_repo</span><span class="o">.</span><span class="n">get_all_tasks</span><span class="p">(</span><span class="n">team</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_repo</span><span class="o">.</span><span class="n">get_all_tasks_for_user</span><span class="p">(</span><span class="n">team</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="TaskService.get_task">
+<a class="viewcode-back" href="../../../source/app.services.html#app.services.task_service.TaskService.get_task">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Task</span><span class="p">,</span> <span class="n">team</span><span class="p">:</span> <span class="n">Team</span><span class="p">,</span> <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Возвращает задачу, если у пользователя есть к ней доступ.</span>
+
+<span class="sd">        Аргументы:</span>
+<span class="sd">            task: Задача, которую нужно получить.</span>
+<span class="sd">            team: Команда, к которой должна относиться задача.</span>
+<span class="sd">            user: Пользователь, выполняющий запрос.</span>
+
+<span class="sd">        Возвращает:</span>
+<span class="sd">            Task: Запрошенная задача.</span>
+
+<span class="sd">        Исключения:</span>
+<span class="sd">            AuthorizationError: Если пользователь не состоит в команде.</span>
+<span class="sd">            WrongInputError: Если задача не относится к указанной команде.</span>
+<span class="sd">            AuthorizationError: Если пользователь не является исполнителем задачи</span>
+<span class="sd">                или не имеет роль MANAGER.</span>
+
+<span class="sd">        Требования:</span>
+<span class="sd">            Пользователь должен состоять в команде team.</span>
+<span class="sd">            Задача должна принадлежать команде team.</span>
+<span class="sd">            Доступ разрешен исполнителю задачи или пользователю с ролью MANAGER.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">team_repo</span><span class="o">.</span><span class="n">belongs_to_team</span><span class="p">(</span><span class="n">team</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">AuthorizationError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">"You are not allowed to do that."</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">team_id</span> <span class="o">!=</span> <span class="n">team</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WrongInputError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">"Task does not belong to the specified team."</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">assignee</span> <span class="o">!=</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span> <span class="ow">or</span> <span class="n">user</span><span class="o">.</span><span class="n">role</span> <span class="o">!=</span> <span class="n">RoleEnum</span><span class="o">.</span><span class="n">MANAGER</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">AuthorizationError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">"You are not allowed to do that."</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">task</span></div>
+
+    
+<div class="viewcode-block" id="TaskService.update_task">
+<a class="viewcode-back" href="../../../source/app.services.html#app.services.task_service.TaskService.update_task">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">update_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">TaskUpdate</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Task</span><span class="p">,</span> <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">,</span> <span class="n">team</span><span class="p">:</span> <span class="n">Team</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Частично обновляет задачу.</span>
+
+<span class="sd">        Аргументы:</span>
+<span class="sd">            data: Данные для частичного обновления задачи.</span>
+<span class="sd">            task: Задача, которую нужно обновить.</span>
+<span class="sd">            user: Пользователь, выполняющий обновление.</span>
+<span class="sd">            team: Команда, к которой должна относиться задача.</span>
+
+<span class="sd">        Возвращает:</span>
+<span class="sd">            Task: Обновленная задача. Если изменений нет, возвращает текущую</span>
+<span class="sd">                задачу без выполнения обновления.</span>
+
+<span class="sd">        Исключения:</span>
+<span class="sd">            AuthorizationError: Если пользователь не состоит в команде.</span>
+<span class="sd">            WrongInputError: Если задача не относится к указанной команде.</span>
+<span class="sd">            AuthorizationError: Если пользователь не имеет роль MANAGER.</span>
+
+<span class="sd">        Требования:</span>
+<span class="sd">            Пользователь должен состоять в команде team.</span>
+<span class="sd">            Задача должна принадлежать команде team.</span>
+<span class="sd">            Изменять задачу может исполнитель задачи или пользователь с ролью MANAGER.</span>
+
+<span class="sd">        Побочные эффекты:</span>
+<span class="sd">            При наличии изменений обновляет задачу и выполняет commit сессии.</span>
+<span class="sd">        """</span>
+
+        <span class="n">changes</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_unset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">team_repo</span><span class="o">.</span><span class="n">belongs_to_team</span><span class="p">(</span><span class="n">team</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">AuthorizationError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">"You are not allowed to do that."</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">team_id</span> <span class="o">!=</span> <span class="n">team</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WrongInputError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">"Task does not belong to the specified team."</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">role</span> <span class="o">!=</span> <span class="n">RoleEnum</span><span class="o">.</span><span class="n">MANAGER</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">AuthorizationError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">"You are not allowed to do that."</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">changes</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">task</span>  <span class="c1"># нечего менять</span>
+        
+        <span class="n">task</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_repo</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">changes</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">task</span></div>
+
+
+<div class="viewcode-block" id="TaskService.delete_task">
+<a class="viewcode-back" href="../../../source/app.services.html#app.services.task_service.TaskService.delete_task">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">delete_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Task</span><span class="p">,</span> <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">,</span> <span class="n">team</span><span class="p">:</span> <span class="n">Team</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Удаляет задачу.</span>
+
+<span class="sd">        Аргументы:</span>
+<span class="sd">            task: Задача, которую нужно удалить.</span>
+<span class="sd">            user: Пользователь, выполняющий удаление.</span>
+<span class="sd">            team: Команда, к которой должна относиться задача.</span>
+
+<span class="sd">        Возвращает:</span>
+<span class="sd">            OperationSuccess: Результат успешной операции.</span>
+
+<span class="sd">        Исключения:</span>
+<span class="sd">            AuthorizationError: Если пользователь не состоит в команде.</span>
+<span class="sd">            WrongInputError: Если задача не относится к указанной команде.</span>
+<span class="sd">            AuthorizationError: Если пользователь не имеет роль MANAGER.</span>
+
+<span class="sd">        Требования:</span>
+<span class="sd">            Пользователь должен состоять в команде team.</span>
+<span class="sd">            Задача должна принадлежать команде team.</span>
+<span class="sd">            Удалять задачу может исполнитель задачи или пользователь с ролью MANAGER.</span>
+
+<span class="sd">        Побочные эффекты:</span>
+<span class="sd">            Удаляет задачу и выполняет commit сессии.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">team_repo</span><span class="o">.</span><span class="n">belongs_to_team</span><span class="p">(</span><span class="n">team</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">AuthorizationError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">"You are not allowed to do that."</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">team_id</span> <span class="o">!=</span> <span class="n">team</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WrongInputError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">"Task does not belong to the specified team."</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">role</span> <span class="o">!=</span> <span class="n">RoleEnum</span><span class="o">.</span><span class="n">MANAGER</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">AuthorizationError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">"You are not allowed to do that."</span><span class="p">)</span>
+        
+        
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_repo</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">OperationSuccess</span><span class="p">()</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Provonsal.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

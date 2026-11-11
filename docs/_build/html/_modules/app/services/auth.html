@@ -1,0 +1,298 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.services.auth &mdash; Employees control system 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Employees control system
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Employees control system</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.services.auth</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.services.auth</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">uuid4</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Response</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.security</span><span class="w"> </span><span class="kn">import</span> <span class="n">OAuth2PasswordRequestForm</span>
+
+<span class="c1"># from v2.repos.online_workers import OnlineWorkersRepo</span>
+<span class="c1"># from v2.schemas.alive import Alive</span>
+<span class="c1"># from v2.schemas.token import Token</span>
+<span class="c1"># from v2.enums.role_enum import RoleEnum</span>
+<span class="c1"># from v2.enums.subcription_enum import SubscriptionEnum</span>
+<span class="c1"># from v2.models import OnlineWorkers, RefreshToken, User</span>
+<span class="c1"># from v2.repos.refresh_token import RefreshTokenRepo</span>
+<span class="c1"># from v2.repos.role import RoleRepo</span>
+<span class="c1"># from v2.repos.subscription import SubcriptionRepo</span>
+<span class="c1"># from v2.repos.user import UserRepo</span>
+<span class="c1"># from v2.schemas.user_register import UserRegister</span>
+<span class="c1"># from v2.schemas.refresh_token import RefreshToken as RefreshTokenSchema</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.ext.asyncio</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncSession</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.exc</span><span class="w"> </span><span class="kn">import</span> <span class="n">NoResultFound</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.exc.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">AuthorizationError</span><span class="p">,</span> <span class="n">WrongInputError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">RoleEnum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">RefreshToken</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.repositories.refresh_token</span><span class="w"> </span><span class="kn">import</span> <span class="n">RefreshTokenRepo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.repositories.user</span><span class="w"> </span><span class="kn">import</span> <span class="n">UserRepo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.refresh_token</span><span class="w"> </span><span class="kn">import</span> <span class="n">RefreshTokenSchema</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.task_update</span><span class="w"> </span><span class="kn">import</span> <span class="n">TaskUpdate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.token</span><span class="w"> </span><span class="kn">import</span> <span class="n">Token</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.update_refresh_token</span><span class="w"> </span><span class="kn">import</span> <span class="n">RefreshTokenUpdate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">utils.password_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">PWDManager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">utils.token_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">TKNManager</span>
+
+<span class="c1"># from v2.schemas.user_response import UserResponse</span>
+
+
+<div class="viewcode-block" id="AuthService">
+<a class="viewcode-back" href="../../../source/app.services.html#app.services.auth.AuthService">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AuthService</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Бизнес-логика для работы с аутентофикацией."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">AsyncSession</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">session</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user_repo</span> <span class="o">=</span> <span class="n">UserRepo</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">refresh_repo</span> <span class="o">=</span> <span class="n">RefreshTokenRepo</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AuthService.login">
+<a class="viewcode-back" href="../../../source/app.services.html#app.services.auth.AuthService.login">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">login</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">form_data</span><span class="p">:</span> <span class="n">OAuth2PasswordRequestForm</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_repo</span><span class="o">.</span><span class="n">get_by_login</span><span class="p">(</span><span class="n">form_data</span><span class="o">.</span><span class="n">username</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">NoResultFound</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WrongInputError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">"Неверный email или пароль"</span><span class="p">)</span>
+
+        <span class="n">is_correct_pwd</span> <span class="o">=</span> <span class="n">PWDManager</span><span class="o">.</span><span class="n">verify_password</span><span class="p">(</span><span class="n">form_data</span><span class="o">.</span><span class="n">password</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">user_credentials</span><span class="o">.</span><span class="n">salt</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">user_credentials</span><span class="o">.</span><span class="n">password_hash</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">is_correct_pwd</span><span class="p">:</span>
+
+            <span class="n">role</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">role</span>
+
+            <span class="n">access_token</span> <span class="o">=</span> <span class="n">TKNManager</span><span class="o">.</span><span class="n">create_access_token</span><span class="p">(</span>
+                <span class="n">data</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">"sub"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                    <span class="s2">"role"</span> <span class="p">:</span> <span class="n">role</span><span class="o">.</span><span class="n">name</span>
+                <span class="p">},</span>
+            <span class="p">)</span>
+            
+            <span class="n">refresh_token</span> <span class="o">=</span> <span class="n">TKNManager</span><span class="o">.</span><span class="n">create_refresh_token</span><span class="p">(</span>
+                <span class="n">data</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">"sub"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">),</span> 
+                    <span class="s2">"tid"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid4</span><span class="p">())</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+            
+            <span class="n">decoded_refresh_token</span> <span class="o">=</span> <span class="n">TKNManager</span><span class="o">.</span><span class="n">decode_token</span><span class="p">(</span><span class="n">refresh_token</span><span class="p">)</span>
+
+            <span class="n">refresh_token_orm</span> <span class="o">=</span> <span class="n">RefreshToken</span><span class="p">(</span>
+                <span class="nb">id</span> <span class="o">=</span> <span class="n">decoded_refresh_token</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"tid"</span><span class="p">),</span>
+                <span class="n">user_id</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="n">expire_date</span> <span class="o">=</span> <span class="n">decoded_refresh_token</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"exp"</span><span class="p">),</span>
+                <span class="n">revoked</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">token_hash</span> <span class="o">=</span> <span class="n">TKNManager</span><span class="o">.</span><span class="n">hash_token</span><span class="p">(</span><span class="n">refresh_token</span><span class="p">),</span>
+            <span class="p">)</span>
+
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">refresh_repo</span><span class="o">.</span><span class="n">update_revoke_all_else_for_user</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">refresh_repo</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">refresh_token_orm</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="n">RoleEnum</span><span class="o">.</span><span class="n">GUEST</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_repo</span><span class="o">.</span><span class="n">are_user_in_any_group</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">)):</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_repo</span><span class="o">.</span><span class="n">change_role</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">RoleEnum</span><span class="o">.</span><span class="n">AUTH</span><span class="p">)</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+            <span class="k">return</span> <span class="n">Token</span><span class="p">(</span>
+                <span class="n">access_token</span><span class="o">=</span><span class="n">access_token</span><span class="p">,</span>
+                <span class="n">refresh_token</span><span class="o">=</span><span class="n">refresh_token</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WrongInputError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">"Неверный email или пароль"</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AuthService.refresh">
+<a class="viewcode-back" href="../../../source/app.services.html#app.services.auth.AuthService.refresh">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">refresh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">refresh_data</span><span class="p">:</span> <span class="n">RefreshTokenSchema</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">payload</span> <span class="o">=</span> <span class="n">TKNManager</span><span class="o">.</span><span class="n">decode_token</span><span class="p">(</span><span class="n">refresh_data</span><span class="o">.</span><span class="n">refresh_token</span><span class="p">)</span>
+            
+            <span class="c1"># Проверяем, что это refresh токен</span>
+            <span class="k">if</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">"refresh"</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">WrongInputError</span><span class="p">(</span>
+                    <span class="n">message</span><span class="o">=</span><span class="s2">"Invalid token type"</span>
+                <span class="p">)</span>
+            
+            <span class="n">user_id</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sub"</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">user_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">WrongInputError</span><span class="p">(</span>
+                    <span class="n">message</span><span class="o">=</span><span class="s2">"Invalid token"</span>
+                <span class="p">)</span>
+            
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">user</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_repo</span><span class="o">.</span><span class="n">get_by_id</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">WrongInputError</span><span class="p">(</span>
+                    <span class="n">message</span><span class="o">=</span><span class="s2">"User not found"</span>
+                <span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">user</span><span class="o">.</span><span class="n">is_active</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">WrongInputError</span><span class="p">(</span>
+                    <span class="n">message</span><span class="o">=</span><span class="s2">"User is not active"</span>
+                <span class="p">)</span>
+            
+            <span class="n">expire_time</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"exp"</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">expire_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">expire_time</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">UTC</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">UTC</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="n">AuthorizationError</span><span class="p">(</span>
+                        <span class="n">message</span><span class="o">=</span><span class="s2">"Token expired. Log in again please"</span>
+                    <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">WrongInputError</span><span class="p">(</span>
+                    <span class="n">message</span><span class="o">=</span><span class="s2">"Invalid token"</span>
+                <span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">ref_db_token</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">refresh_repo</span><span class="o">.</span><span class="n">get_by_hash</span><span class="p">(</span><span class="n">refresh_data</span><span class="o">.</span><span class="n">refresh_token</span><span class="p">)</span>
+
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">WrongInputError</span><span class="p">(</span>
+                    <span class="n">message</span><span class="o">=</span><span class="s2">"Invalid refresh token"</span>
+                <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">ref_db_token</span><span class="o">.</span><span class="n">revoked</span><span class="p">:</span>
+                
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">refresh_repo</span><span class="o">.</span><span class="n">update_revoke_all_family</span><span class="p">(</span><span class="n">ref_db_token</span><span class="o">.</span><span class="n">family_id</span><span class="p">)</span>
+
+                <span class="k">raise</span> <span class="n">AuthorizationError</span><span class="p">(</span>
+                    <span class="n">message</span><span class="o">=</span><span class="s2">"Revoked token. Log in again please."</span>
+                <span class="p">)</span>
+
+            <span class="n">role</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">role</span>
+
+            <span class="n">access_token</span> <span class="o">=</span> <span class="n">TKNManager</span><span class="o">.</span><span class="n">create_access_token</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">"sub"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">),</span> <span class="s2">"role"</span> <span class="p">:</span> <span class="n">role</span><span class="o">.</span><span class="n">name</span><span class="p">})</span>
+            <span class="n">refresh_token</span> <span class="o">=</span> <span class="n">TKNManager</span><span class="o">.</span><span class="n">create_refresh_token</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">"sub"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">),</span> <span class="s2">"tid"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid4</span><span class="p">())})</span>
+
+            <span class="n">decoded_refresh_token</span> <span class="o">=</span> <span class="n">TKNManager</span><span class="o">.</span><span class="n">decode_token</span><span class="p">(</span><span class="n">refresh_token</span><span class="p">)</span>
+
+            <span class="n">ref_db_token</span><span class="o">.</span><span class="n">revoked</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="n">changes_schema</span> <span class="o">=</span> <span class="n">RefreshTokenUpdate</span><span class="p">(</span>
+                <span class="n">revoked</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+
+            <span class="n">changes</span> <span class="o">=</span> <span class="n">changes_schema</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_unset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">refresh_repo</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ref_db_token</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">changes</span><span class="p">)</span>
+
+            <span class="n">new_refresh_token_db</span> <span class="o">=</span> <span class="n">RefreshToken</span><span class="p">(</span>
+                <span class="nb">id</span> <span class="o">=</span> <span class="n">decoded_refresh_token</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"tid"</span><span class="p">),</span>
+                <span class="n">user_id</span> <span class="o">=</span> <span class="n">user_id</span><span class="p">,</span>
+                <span class="n">created_at</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">UTC</span><span class="p">),</span>
+                <span class="n">expire_date</span> <span class="o">=</span> <span class="n">decoded_refresh_token</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"exp"</span><span class="p">),</span>
+                <span class="n">revoked</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">token_hash</span> <span class="o">=</span> <span class="n">TKNManager</span><span class="o">.</span><span class="n">hash_token</span><span class="p">(</span><span class="n">refresh_token</span><span class="p">),</span>
+                <span class="n">family_id</span> <span class="o">=</span> <span class="n">ref_db_token</span><span class="o">.</span><span class="n">family_id</span>
+            <span class="p">)</span>
+
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">refresh_repo</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">new_refresh_token_db</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">Token</span><span class="p">(</span>
+                <span class="n">access_token</span><span class="o">=</span><span class="n">access_token</span><span class="p">,</span>
+                <span class="n">refresh_token</span><span class="o">=</span><span class="n">refresh_token</span>
+            <span class="p">)</span>
+            
+
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">WrongInputError</span><span class="p">(</span>
+                <span class="n">message</span><span class="o">=</span><span class="s2">"Invalid refresh token"</span>
+            <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Provonsal.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
