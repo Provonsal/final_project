@@ -30,14 +30,11 @@ class ImportanceEnum(Enum):
     SKIP = auto()
 
 class DatabaseConfig(NamedTuple):
-    DB_NAME: str | None = Config.get_env_value("DB_NAME")
-    DB_PWD: str | None = Config.get_env_value("DB_PWD")
-    DB_USER: str | None = Config.get_env_value("DB_USER")
-    DB_HOST: str | None = Config.get_env_value("DB_HOST")
-    DB_NAME_N_DRIVER: str | None = Config.get_env_value("DB_NAME_N_DRIVER")
-
-    # driver://user:pass@localhost/dbname
+    DATABASE_URL: str | None = Config.get_env_value("DATABASE_URL")
 
     @property
     def url(self):
-        return f"{self.DB_NAME_N_DRIVER}://{self.DB_USER}:{self.DB_PWD}@{self.DB_HOST}/{self.DB_NAME}"
+        if self.DATABASE_URL is None:
+            raise ValueError("DATABASE_URL is not set in the environment variables.")
+        return self.DATABASE_URL
+        
