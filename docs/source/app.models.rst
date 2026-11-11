@@ -50,6 +50,6 @@ Module contents
 .. automodule:: app.models
    :no-members:
    :no-inherited-members:
-   :no-index:
+   :ignore-module-all:
    :show-inheritance:
    :undoc-members:
