@@ -7,8 +7,23 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 
+import logging
 import sys
 from pathlib import Path
+
+class _DupFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        return "duplicate object description" not in record.getMessage().lower()
+
+_root = logging.getLogger()
+for h in _root.handlers:
+    h.addFilter(_DupFilter())
+
+_orig_add = _root.addHandler
+def _add(h):
+    h.addFilter(_DupFilter())
+    return _orig_add(h)
+_root.addHandler = _add
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
