@@ -22,7 +22,7 @@ class TeamRepo(BaseRepo[Team]):
 
     async def get_teams(self, user_id: uuid.UUID):
         
-        return (await self.session.scalars(select(self.model).where(self.model.owner == user_id))).all()
+        return (await self.session.scalars(select(self.model).where(self.model.mtm_teams_users.any(TeamUser.user_id == user_id)))).all()
 
     async def get_team_users(self, id: uuid.UUID):
         stmt = (
