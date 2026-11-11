@@ -139,7 +139,7 @@ class EvaluationService:
         Побочные эффекты:
             При наличии изменений обновляет запись в репозитории.
         """
-        
+
         if not await self.team_repo.belongs_to_team(team.id, user.id):
             raise AuthorizationError(message="You are not allowed to do that.")
         if user.role not in (RoleEnum.MANAGER):
@@ -184,6 +184,7 @@ class EvaluationService:
         Побочные эффекты:
             Удаляет запись из репозитория.
         """
+        
         if not await self.team_repo.belongs_to_team(team.id, user.id):
             raise AuthorizationError(message="You are not allowed to do that.")
         if user.role not in (RoleEnum.MANAGER):
