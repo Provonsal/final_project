@@ -51,3 +51,7 @@ app.add_exception_handler(Exception, unhandled_exception_handler)
 @app.get("/views/")
 async def views_root():
     return RedirectResponse("/views/teams/", status_code=303)
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
