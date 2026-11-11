@@ -48,6 +48,7 @@ Module contents
 ---------------
 
 .. automodule:: app.models
-   :members:
+   :no-members:
+   :no-inherited-members:
    :show-inheritance:
    :undoc-members:
