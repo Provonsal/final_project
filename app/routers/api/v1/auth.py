@@ -9,9 +9,9 @@ from app.schemas.user_register import UserRegister
 
 
 router = APIRouter(
-    prefix="/auth",  # Все пути будут начинаться с /users
-    tags=["auth"],    # Тег для документации
-    responses={404: {"description": "Not found"}}  # Общие ответы
+    prefix="/auth",  
+    tags=["auth"],
+    responses={404: {"description": "Not found"}}
 )
 
 @router.post("/login")
