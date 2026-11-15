@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.dependencies import CurrentUserDep, EvaluationDep, EvaluationServiceDep, MemberOrManagerDep, TaskDep, TeamDep
+from app.dependencies import CurrentUserDep, EvaluationDep, EvaluationServiceDep, ManagerDep, MemberOrManagerDep, TaskDep, TeamDep
 from app.schemas.create_evaluation import EvaluationCreate
 from app.schemas.update_evaluation import EvaluationUpdate
 
@@ -13,7 +13,7 @@ async def write_evaluation(
     evaluation_data: EvaluationCreate,
     evaluation_service_dep: EvaluationServiceDep,
     task: TaskDep,
-    user: MemberOrManagerDep,
+    user: ManagerDep,
     team: TeamDep
 ):
     
@@ -35,7 +35,7 @@ async def edit_evaluation(
     evaluation: EvaluationDep,
     evaluation_data: EvaluationUpdate,
     evaluation_service_dep: EvaluationServiceDep,
-    user: CurrentUserDep,
+    user: ManagerDep,
     task: TaskDep,
     team: TeamDep
 ): 
