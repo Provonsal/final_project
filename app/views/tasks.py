@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
+from html import escape
 
 from app.views.api_client import api_call, ok, redirect_if_anonymous
 from app.views.permissions import cap, flash
@@ -81,7 +82,9 @@ async def task_detail(request: Request, team_id: str, task_id: str):
         return redir
     r = await api_call(request, "GET", f"/api/v1/teams/{team_id}/tasks/{task_id}")
     if not ok(r):
-        return HTMLResponse(f"<pre class='error'>{r.text}</pre><a href='/views/teams/{team_id}/tasks'>Back</a>")
+        safe_error = escape(r.text)
+        safe_team_id = escape(team_id, quote=True)
+        return HTMLResponse(f"<pre class='error'>{safe_error}</pre><a href='/views/teams/{safe_team_id}/tasks'>Back</a>")
     return templates.TemplateResponse(
         request, "tasks/detail.html",
         {"team_id": team_id, "task_id": task_id, "task": r.json(),
