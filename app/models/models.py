@@ -210,7 +210,7 @@ class Team(BaseModel):
     
     __tablename__ = 'teams'
 
-    name: Mapped[str] = mapped_column(String(40), nullable=False)
+    name: Mapped[str] = mapped_column(String(40), nullable=False, unique=True, index=True)
     max_per_team: Mapped[int] = mapped_column(Integer, nullable=False, default=10)
     owner: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
 

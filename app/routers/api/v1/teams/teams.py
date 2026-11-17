@@ -5,6 +5,8 @@ from app.schemas.update_team import TeamUpdate
 
 router = APIRouter()
 
+
+
 @router.post("/")
 async def create_team(
     user: ManagerDep, 

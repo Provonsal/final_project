@@ -311,7 +311,14 @@ class TeamService:
         )
 
         await self.team_repo.create(new_team)
-        await self.create_invite_code(new_team, user)
+
+        new_invite_code = TeamInviteCode(
+            creator=user.id,
+            team=new_team,
+            body=self.team_invite_code_repo.create_code_body()
+        )
+
+        await self.team_invite_code_repo.create(new_invite_code)
         await self.session.commit()
         return new_team
 
