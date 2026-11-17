@@ -81,3 +81,9 @@ class DatabaseConfig(NamedTuple):
     def url(self):
         return raise_if_None(self.DATABASE_URL, "DATABASE_URL")
         
+class APIServerConfig(NamedTuple):
+    API_BASE_URL: str | None = Config.get_env_value("API_BASE_URL")
+
+    @property
+    def url(self):
+        return raise_if_None(self.API_BASE_URL, "API_BASE_URL")
