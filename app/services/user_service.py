@@ -29,7 +29,7 @@ class UserService:
         self.session = session
         self.user_repo = UserRepo(session)
 
-    async def register(self, user: UserRegister):
+    async def register(self, user: UserRegister, pwd_manager: PWDManager):
         """
         Регистрирует нового пользователя.
 
@@ -63,7 +63,7 @@ class UserService:
 
         role = RoleEnum.GUEST if user.role is None else user.role
 
-        salt, hash_pwd = PWDManager.create_credentials(user.password)
+        salt, hash_pwd = pwd_manager.create_credentials(user.password)
                 
         new_user = User(
             email=user.username,

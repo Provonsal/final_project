@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.exc.exceptions import AppException
 from app.exc.handlers import app_exception_handler, http_exception_handler, unhandled_exception_handler, validation_exception_handler
-from utils.init_check_ups import check_db_config
+
 from .routers.api.api_router import router as api_router
 from starlette.middleware.sessions import SessionMiddleware
 from .views import auth, teams, tasks, meetings, comments, evaluations, calendar, users
@@ -18,7 +18,7 @@ load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    check_db_config()
+    
     yield
     ...
 

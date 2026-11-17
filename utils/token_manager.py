@@ -1,33 +1,47 @@
 from datetime import UTC, datetime, timedelta, timezone
 import hashlib
-from typing import Optional
+from typing import NamedTuple, Optional
 from fastapi import HTTPException
 from jose import JWTError, jwt
 
+from utils.config import Config, TokenConfig
+
+
+class TokenConfigTuple(NamedTuple):
+    SECRET_KEY: str
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+    REFRESH_TOKEN_EXPIRE_DAYS: int
+
 
 class TKNManager:
-    SECRET_KEY: str = "your-secret-key-change-in-production"
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    _token_config: TokenConfigTuple
 
-    @classmethod
-    def create_access_token(cls, data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    def __init__(self, token_config: TokenConfig):
+        config = TokenConfigTuple(
+            token_config.key_value,
+            token_config.token_cipher_alg,
+            int(token_config.access_token_expire_value),
+            int(token_config.refresh_token_expire_value)
+        )
+
+        self._token_config = config
+
+    def create_access_token(self, data: dict, expires_delta: Optional[timedelta] = None) -> str:
         """Создание JWT access токена"""
         to_encode = data.copy()
         
         if expires_delta:
             expire = datetime.now(UTC) + expires_delta
         else:
-            expire = datetime.now(UTC) + timedelta(minutes=cls.ACCESS_TOKEN_EXPIRE_MINUTES)
+            expire = datetime.now(UTC) + timedelta(minutes=self._token_config.ACCESS_TOKEN_EXPIRE_MINUTES)
         
         to_encode.update({"exp": expire, "type": "access"})
-        encoded_jwt = jwt.encode(to_encode, cls.SECRET_KEY, algorithm=cls.ALGORITHM)
+        encoded_jwt = jwt.encode(to_encode, self._token_config.SECRET_KEY, algorithm=self._token_config.ALGORITHM)
         
         return encoded_jwt
 
-    @classmethod
-    def hash_token(cls, token: str) -> bytes:
+    def hash_token(self, token: str) -> bytes:
         """
         Преобразует строковый JWT-токен в 32-байтовый хэш (SHA-256).
         """
@@ -36,22 +50,20 @@ class TKNManager:
         # Вычисляем SHA-256 (возвращает 32 байта)
         return hashlib.sha256(token_bytes).digest()
 
-    @classmethod
-    def create_refresh_token(cls, data: dict) -> str:
+    def create_refresh_token(self, data: dict) -> str:
         """Создание JWT refresh токена"""
         to_encode = data.copy()
-        expire = datetime.now(UTC) + timedelta(days=cls.REFRESH_TOKEN_EXPIRE_DAYS)
+        expire = datetime.now(UTC) + timedelta(days=self._token_config.REFRESH_TOKEN_EXPIRE_DAYS)
         
         to_encode.update({"exp": expire, "type": "refresh"})
-        encoded_jwt = jwt.encode(to_encode, cls.SECRET_KEY, algorithm=cls.ALGORITHM)
+        encoded_jwt = jwt.encode(to_encode, self._token_config.SECRET_KEY, algorithm=self._token_config.ALGORITHM)
         
         return encoded_jwt
 
-    @classmethod
-    def decode_token(cls, token: str) -> dict:
+    def decode_token(self, token: str) -> dict:
         """Декодирование JWT токена"""
         try:
-            payload = jwt.decode(token, cls.SECRET_KEY, algorithms=[cls.ALGORITHM])
+            payload = jwt.decode(token, self._token_config.SECRET_KEY, algorithms=[self._token_config.ALGORITHM])
             return payload
         except JWTError:
             raise HTTPException(

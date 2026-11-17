@@ -43,40 +43,40 @@ class AuthService:
         self.user_repo = UserRepo(session)
         self.refresh_repo = RefreshTokenRepo(session)
 
-    async def login(self, form_data: OAuth2PasswordRequestForm):
+    async def login(self, form_data: OAuth2PasswordRequestForm, pwd_manager: PWDManager, tkn_manager: TKNManager):
         try:
             user = await self.user_repo.get_by_login(form_data.username)
         except NoResultFound:
             raise WrongInputError(message="Неверный email или пароль")
 
-        is_correct_pwd = PWDManager.verify_password(form_data.password, user.user_credentials.salt, user.user_credentials.password_hash)
+        is_correct_pwd = pwd_manager.verify_password(form_data.password, user.user_credentials.salt, user.user_credentials.password_hash)
 
         if is_correct_pwd:
 
             role = user.role
 
-            access_token = TKNManager.create_access_token(
+            access_token = tkn_manager.create_access_token(
                 data={
                     "sub": str(user.id),
                     "role" : role.name
                 },
             )
             
-            refresh_token = TKNManager.create_refresh_token(
+            refresh_token = tkn_manager.create_refresh_token(
                 data={
                     "sub": str(user.id), 
                     "tid": str(uuid4())
                 }
             )
             
-            decoded_refresh_token = TKNManager.decode_token(refresh_token)
+            decoded_refresh_token = tkn_manager.decode_token(refresh_token)
 
             refresh_token_orm = RefreshToken(
                 id = decoded_refresh_token.get("tid"),
                 user_id = user.id,
                 expire_date = decoded_refresh_token.get("exp"),
                 revoked=False,
-                token_hash = TKNManager.hash_token(refresh_token),
+                token_hash = tkn_manager.hash_token(refresh_token),
             )
 
             await self.refresh_repo.update_revoke_all_else_for_user(user.id)
@@ -92,9 +92,9 @@ class AuthService:
         else:
             raise WrongInputError(message="Неверный email или пароль")
 
-    async def refresh(self, refresh_data: RefreshTokenSchema):
+    async def refresh(self, refresh_data: RefreshTokenSchema, tkn_manager: TKNManager):
         try:
-            payload = TKNManager.decode_token(refresh_data.refresh_token)
+            payload = tkn_manager.decode_token(refresh_data.refresh_token)
             
             # Проверяем, что это refresh токен
             if payload.get("type") != "refresh":
@@ -151,10 +151,10 @@ class AuthService:
 
             role = user.role
 
-            access_token = TKNManager.create_access_token(data={"sub": str(user.id), "role" : role.name})
-            refresh_token = TKNManager.create_refresh_token(data={"sub": str(user.id), "tid": str(uuid4())})
+            access_token = tkn_manager.create_access_token(data={"sub": str(user.id), "role" : role.name})
+            refresh_token = tkn_manager.create_refresh_token(data={"sub": str(user.id), "tid": str(uuid4())})
 
-            decoded_refresh_token = TKNManager.decode_token(refresh_token)
+            decoded_refresh_token = tkn_manager.decode_token(refresh_token)
 
             ref_db_token.revoked = True
 
@@ -172,7 +172,7 @@ class AuthService:
                 created_at = datetime.datetime.now(datetime.UTC),
                 expire_date = decoded_refresh_token.get("exp"),
                 revoked=False,
-                token_hash = TKNManager.hash_token(refresh_token),
+                token_hash = tkn_manager.hash_token(refresh_token),
                 family_id = ref_db_token.family_id
             )
 

@@ -41,6 +41,16 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       SECRET_KEY: ${SECRET_KEY}
+      VIEWS_SECRET: ${VIEWS_SECRET}
+      TEST_DB_URL: ${TEST_DB_URL}
+      API_BASE_URL: ${API_BASE_URL}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS}
+      TOKEN_ALGORITHM: ${TOKEN_ALGORITHM}
+      ALGORITHM: ${ALGORITHM}
+      SALT_SIZE: ${SALT_SIZE}
+      HASH_SIZE: ${HASH_SIZE}
+      ITERATIONS: ${ITERATIONS}
     volumes:
       - ./app:/app/app
       - ./utils:/app/utils

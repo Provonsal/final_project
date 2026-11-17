@@ -4,8 +4,9 @@ from fastapi import Request
 from fastapi.responses import RedirectResponse
 
 from app.views.permissions import mark_forbidden, mark_allowed
+from utils.config import APIServerConfig
 
-API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
+API_BASE_URL = APIServerConfig().url
 
 
 def get_token(request: Request) -> str | None:
