@@ -1,3 +1,5 @@
+from html import escape
+
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
@@ -76,7 +78,8 @@ async def meeting_detail(request: Request, team_id: str, meeting_id: str):
         return redir
     r = await api_call(request, "GET", f"/api/v1/teams/{team_id}/meetings/{meeting_id}")
     if not ok(r):
-        return HTMLResponse(f"<pre class='error'>{r.text}</pre>")
+        safe_error = escape(r.text)
+        return HTMLResponse(f"<pre class='error'>{safe_error}</pre>")
     return templates.TemplateResponse(
         request, "meetings/detail.html",
         {"team_id": team_id, "meeting_id": meeting_id, "meeting": r.json()},

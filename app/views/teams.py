@@ -1,3 +1,5 @@
+from html import escape
+
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
@@ -105,7 +107,8 @@ async def team_detail(request: Request, team_id: str):
         return redir
     r = await api_call(request, "GET", f"/api/v1/teams/{team_id}")
     if not ok(r):
-        return HTMLResponse(f"<pre class='error'>{r.text}</pre><a href='/views/teams/'>Back</a>")
+        safe_error = escape(r.text)
+        return HTMLResponse(f"<pre class='error'>{safe_error}</pre><a href='/views/teams/'>Back</a>")
     return templates.TemplateResponse(
         request, "teams/detail.html",
         {"team": r.json(), "team_id": team_id},
