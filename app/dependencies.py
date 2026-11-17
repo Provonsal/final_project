@@ -23,6 +23,8 @@ from app.services.meeting_service import MeetingService
 from app.services.task_service import TaskService
 from app.services.team_service import TeamService
 from app.services.user_service import UserService
+from utils.config import PWDConfig, TokenConfig
+from utils.password_manager import PWDManager
 from utils.token_manager import TKNManager
 
 
@@ -63,8 +65,20 @@ CalendarServiceDep = Annotated[CalendarService, Depends(get_calendar_service)]
 CommentServiceDep = Annotated[CommentService, Depends(get_comment_service)]
 EvaluationServiceDep = Annotated[EvaluationService, Depends(get_evaluation_service)]
 
+def get_token_manager() -> TKNManager:
+    token_configs = TokenConfig()
+    return TKNManager(token_configs)
+
+def get_pwd_manager() -> PWDManager:
+    pwd_configs = PWDConfig()
+    return PWDManager(pwd_configs)
+
+TokenManagerDep = Annotated[TKNManager, Depends(get_token_manager)]
+PasswordManagerDep = Annotated[PWDManager, Depends(get_pwd_manager)]
+
 async def get_current_user(
     user_repo_dep: UserServiceDep,
+    token_manager: TokenManagerDep,
     token: str = Depends(oauth2_scheme),
 ) -> User:
     """Получение текущего пользователя по JWT токену"""
@@ -75,7 +89,7 @@ async def get_current_user(
     )
     
     try:
-        payload: dict[str, Any] = TKNManager.decode_token(token)
+        payload: dict[str, Any] = token_manager.decode_token(token)
         user_id: str | None = payload.get("sub")
         
         if user_id is None:
