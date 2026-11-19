@@ -149,7 +149,8 @@ class MeetingService:
         new_invite_code = MeetingInviteCode(
             meeting=new_meeting,
             body=self.meeting_invite_code_repo.create_code_body(),
-            user=user
+            user=user,
+            uses_left=-1  # -1 означает неограниченное количество использований
         )
 
         await self.meeting_repo.create(new_meeting)
@@ -285,16 +286,20 @@ class MeetingService:
 
         if not code.active: 
             raise BusinessRuleError(message="Invite code not active")
-
         if not await self.team_repo.belongs_to_team(team.id, user.id):
             raise AuthorizationError(message="You are not allowed to do that.")
-
         if await self.meeting_repo.belongs_to_meeting(code.connected_to, user.id):
             raise AuthorizationError(message="You are already a participant of this meeting.")
 
         current_participants = await self.meeting_repo.get_participants_count(code.connected_to)
+        
         if current_participants >= meeting.max_members:
             raise BusinessRuleError(message="Meeting is already full.")
+        if code.uses_left == 0:
+            raise BusinessRuleError(message="Invite code has no uses left.")
+        if code.uses_left > 0:
+            code.uses_left -= 1
+            await self.meeting_invite_code_repo.update(code.id, {"uses_left": code.uses_left})
 
         await self.meeting_repo.add_participant(code.meeting, user)
         await self.session.commit()
@@ -341,7 +346,7 @@ class MeetingService:
             await self.session.rollback()
             return OperationFailure(message="Failed to leave the meeting. You might not be a participant.", status="failure")
 
-    async def create_invite_code(self, team: Team, meeting: Meeting, user: User):
+    async def create_invite_code(self, team: Team, meeting: Meeting, user: User, uses: int):
         """
         Создает код приглашения для встречи.
 
@@ -372,11 +377,16 @@ class MeetingService:
         if meeting.creator != user.id:
             raise AuthorizationError(message="You do not have permission to create an invite code for this meeting.")
 
-        new_invite_code = TeamInviteCode(
+
+        await self.meeting_invite_code_repo.deactivate_all_codes_for_meeting(meeting.id)
+        
+        new_invite_code = MeetingInviteCode(
             meeting=meeting,
             body=self.meeting_invite_code_repo.create_code_body(),
-            user=user
+            user=user,
+            uses_left=uses
         )
+        await self.meeting_invite_code_repo.create(new_invite_code)
         await self.session.commit()
         return new_invite_code.body
 

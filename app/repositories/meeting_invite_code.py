@@ -4,7 +4,7 @@ import string
 from uuid import uuid4
 import uuid
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import selectinload
 
 
@@ -28,6 +28,18 @@ class MeetingInviteCodeRepo(BaseRepo[MeetingInviteCode]):
 
     async def get_by_meeting_id(self, meeting_id):
         return (await self.session.scalars(select(self.model).where(self.model.connected_to == meeting_id))).one()
+
+    async def get_all_by_meeting_id(self, meeting_id):
+        return (await self.session.scalars(select(self.model).where(self.model.connected_to == meeting_id))).all()
+
+    async def deactivate_all_codes_for_meeting(self, meeting_id):
+        stmt = (
+            update(self.model)
+            .where(self.model.connected_to == meeting_id)
+            .values(active=False)
+        )
+        await self.session.execute(stmt)
+        await self.session.flush()
 
     def _secure_random_string(self, n: int) -> str:
         alphabet = string.ascii_letters + string.digits

@@ -56,6 +56,18 @@ async def get_invite_code(
 ):
     return await meeting_service_dep.get_invite_code(team, meeting, user)
 
+@router.post("/{meeting_id}/invite_code")
+async def create_invite_code(
+    team: TeamDep,
+    user: ManagerDep,
+    meeting: MeetingDep,
+    meeting_service_dep: MeetingServiceDep,
+    uses: int | None = None
+):
+    if uses is None:
+        uses = -1  # -1 означает неограниченное количество использований
+    return await meeting_service_dep.create_invite_code(team, meeting, user, uses)
+
 @router.post("/{meeting_id}/leave")
 async def leave_meeting(
     team: TeamDep,

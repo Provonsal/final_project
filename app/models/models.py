@@ -421,6 +421,7 @@ class MeetingInviteCode(BaseModel):
         ForeignKey('meets.id', ondelete="CASCADE"),   # ← добавить
         nullable=False,
     )
+    uses_left: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     body: Mapped[str] = mapped_column(String(40), nullable=False)
     user: Mapped["User"] = relationship(back_populates="meeting_invite_codes")
     meeting: Mapped["Meeting"] = relationship(back_populates="invite_codes")
