@@ -23,7 +23,7 @@ class PWDManager:
             int(token_config.iterations)
         )
 
-        self._token_config = config
+        self._pwd_config = config
     
     def generate_salt(self) -> bytes:
         """Генерирует криптографически безопасную соль (16 байт)."""

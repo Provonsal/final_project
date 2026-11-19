@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.dependencies import ManagerDep, MemberOrManagerDep, TeamDep, TeamServiceDep, AnyAuthDep
+from app.dependencies import ManagerDep, MemberDep, MemberOrManagerDep, TeamDep, TeamServiceDep, AnyAuthDep
 from app.schemas.create_team import TeamCreate
 from app.schemas.update_team import TeamUpdate
 
@@ -25,7 +25,7 @@ async def join(
     team_dep: TeamServiceDep
 ):
     
-    await team_dep.join_team(current_user, invite_code)
+    return await team_dep.join_team(current_user, invite_code)
 
 @router.post("/code")
 async def get_invite_code(
@@ -34,6 +34,14 @@ async def get_invite_code(
     team_service_dep: TeamServiceDep
 ):
     return await team_service_dep.get_invite_code(team, user)
+
+@router.post("/{team_id}/leave")
+async def leave(
+    current_user: MemberDep,
+    team: TeamDep,
+    team_dep: TeamServiceDep
+):
+    return await team_dep.leave_team(current_user, team)
 
 @router.get("/")
 async def read_teams(
