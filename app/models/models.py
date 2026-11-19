@@ -77,6 +77,16 @@ class User(BaseModel):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+    meeting_invite_codes: Mapped[list["MeetingInviteCode"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+    team_invite_codes: Mapped[list["TeamInviteCode"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
 
 class UserCredentials(BaseModel):
@@ -275,7 +285,11 @@ class TeamInviteCode(BaseModel):
     
     __tablename__ = 'invite_codes'
 
-    creator: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    creator: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey('users.id', ondelete="CASCADE"),
+        nullable=False
+    )
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     connected_to: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -285,6 +299,7 @@ class TeamInviteCode(BaseModel):
     body: Mapped[str] = mapped_column(String(40), nullable=False)
 
     team: Mapped["Team"] = relationship(back_populates="invite_codes")
+    user: Mapped["User"] = relationship(back_populates="team_invite_codes")
 
 
 class TaskRate(BaseModel):
@@ -350,6 +365,11 @@ class Meeting(BaseModel):
         passive_deletes=True,
     )
     team: Mapped["Team"] = relationship(back_populates="meets")
+    invite_codes: Mapped[list["MeetingInviteCode"]] = relationship(
+        back_populates='meeting',
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
 
 class MeetingUser(Base):
@@ -376,3 +396,31 @@ class MeetingUser(Base):
 
     meet: Mapped["Meeting"] = relationship(back_populates="members")
     user: Mapped["User"] = relationship(back_populates="meetings_mtm_members")
+
+class MeetingInviteCode(BaseModel):
+    """
+    MeetingInviteCode model representing an invitation code for meetings.
+    
+    Attributes:
+        creator (uuid.UUID): The unique identifier of the user who created the invite code.
+        active (bool): Indicates whether the invite code is active.
+        connected_to (uuid.UUID): The unique identifier of the meeting associated with the invite code.
+        body (str): The content of the invite code.
+    """
+    
+    __tablename__ = 'meeting_invite_codes'
+
+    creator: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey('users.id', ondelete="CASCADE"),
+        nullable=False
+    )
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    connected_to: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey('meets.id', ondelete="CASCADE"),   # ← добавить
+        nullable=False,
+    )
+    body: Mapped[str] = mapped_column(String(40), nullable=False)
+    user: Mapped["User"] = relationship(back_populates="meeting_invite_codes")
+    meeting: Mapped["Meeting"] = relationship(back_populates="invite_codes")
