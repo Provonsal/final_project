@@ -1,10 +1,5 @@
 
-from functools import wraps
-from inspect import signature
-from typing import Any, Callable
-import uuid
 
-from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.exc.exceptions import AuthorizationError, WrongInputError
@@ -12,9 +7,8 @@ from app.models import RoleEnum
 from app.models.models import Comment, Task, Team, User
 from app.repositories.commentary import CommentRepo
 from app.repositories.team import TeamRepo
-from app.schemas.create_comment import CommentCreate
-from app.schemas.update_comment import CommentUpdate
-from app.schemas.success import OperationSuccess
+from app.schemas.create_comment import CreateComment
+from app.schemas.update_comment import UpdateComment
 
 
 
@@ -89,7 +83,7 @@ class CommentService:
         
         return comment
 
-    async def create_comment(self, data: CommentCreate, user: User, task: Task, team: Team):
+    async def create_comment(self, data: CreateComment, user: User, task: Task, team: Team):
         """
         Создает комментарий к задаче.
 
@@ -129,7 +123,7 @@ class CommentService:
         return new_comment
 
      
-    async def update(self, data: CommentUpdate, comment: Comment, task: Task, user: User, team: Team):
+    async def update(self, data: UpdateComment, comment: Comment, task: Task, user: User, team: Team):
         """
         Частично обновляет комментарий.
 
@@ -223,4 +217,4 @@ class CommentService:
 
         await self.comment_repo.delete(comment)
         await self.session.commit()
-        return OperationSuccess()
+        return True

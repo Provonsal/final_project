@@ -1,22 +1,14 @@
 
-from functools import wraps
-from inspect import signature
-import uuid
 
-from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.exc.exceptions import AuthorizationError, BusinessRuleError, NotFoundError
-from app.models import RoleEnum, TaskStatusEnum
-from app.models.models import Comment, Task, TaskRate, Team, User
-from app.repositories.commentary import CommentRepo
+from app.exc.exceptions import AuthorizationError, BusinessRuleError
+from app.models import RoleEnum
+from app.models.models import Task, TaskRate, Team, User
 from app.repositories.evaluation import EvaluationRepo
 from app.repositories.team import TeamRepo
-from app.schemas.create_comment import CommentCreate
-from app.schemas.create_evaluation import EvaluationCreate
-from app.schemas.success import OperationSuccess
-from app.schemas.update_comment import CommentUpdate
-from app.schemas.update_evaluation import EvaluationUpdate
+from app.schemas.create_evaluation import CreateEvaluation
+from app.schemas.update_evaluation import UpdateEvaluation
 from sqlalchemy.exc import NoResultFound
 
 class EvaluationService:
@@ -67,7 +59,7 @@ class EvaluationService:
         return evaluation
 
     
-    async def create_evaluation(self, data: EvaluationCreate, user: User, team: Team, task: Task):
+    async def create_evaluation(self, data: CreateEvaluation, user: User, team: Team, task: Task):
         """
         Создает оценку задачи от имени указанного пользователя.
 
@@ -112,7 +104,7 @@ class EvaluationService:
         return new_evaluation
 
     
-    async def update(self, data: EvaluationUpdate, user: User, team: Team, task: Task, evaluation: TaskRate):
+    async def update(self, data: UpdateEvaluation, user: User, team: Team, task: Task, evaluation: TaskRate):
         """
         Частично обновляет оценку.
 
@@ -196,4 +188,4 @@ class EvaluationService:
         
         await self.evaluation_repo.delete(evaluation)
         await self.session.commit()
-        return OperationSuccess()
+        return True

@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from app.models.TaskStatusEnum import TaskStatusEnum
 
 
-class TaskCreate(BaseModel):
+class CreateTask(BaseModel):
     title: str
     description: str
     assignee: uuid.UUID

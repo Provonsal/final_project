@@ -1,7 +1,9 @@
 from fastapi import APIRouter
 from app.dependencies import TaskDep, TeamDep, TaskServiceDep, ManagerDep, MemberOrManagerDep
-from app.schemas.task_create import TaskCreate
-from app.schemas.task_update import TaskUpdate
+from app.schemas.create_task import CreateTask
+from app.schemas.response_success import ResponseOperationFailure, ResponseOperationSuccess
+from app.schemas.response_task import ResponseTaskSchema
+from app.schemas.update_task import UpdateTask
 
 router = APIRouter()
 
@@ -10,9 +12,18 @@ async def create_tasks(
     task_service_dep: TaskServiceDep,
     team: TeamDep, 
     user: ManagerDep,
-    data: TaskCreate
+    data: CreateTask
 ):
-    return await task_service_dep.create_task(data, team, user)
+    task = await task_service_dep.create_task(data, team, user)
+    return ResponseTaskSchema(
+        id=task.id,
+        title=task.title,
+        description=task.description,
+        assignee_id=task.assignee,
+        due_date=task.due_date.isoformat(),
+        status=task.status,
+        team_id=task.team_id
+    )
     
 
 @router.get("")
@@ -21,7 +32,18 @@ async def read_tasks(
     team: TeamDep, 
     user: MemberOrManagerDep,
 ):
-    return await task_service_dep.get_all_tasks(team, user)
+    tasks = await task_service_dep.get_all_tasks(team, user)
+    return [
+        ResponseTaskSchema(
+            id=task.id,
+            title=task.title,
+            description=task.description,
+            assignee_id=task.assignee,
+            due_date=task.due_date.isoformat(),
+            status=task.status,
+            team_id=task.team_id
+        ) for task in tasks
+    ]
 
 
 @router.get("/{task_id}")
@@ -31,7 +53,16 @@ async def read_task(
     task: TaskDep,
     task_service_dep: TaskServiceDep,
 ):
-    return await task_service_dep.get_task(task, team, user)
+    task = await task_service_dep.get_task(task, team, user)
+    return ResponseTaskSchema(
+        id=task.id,
+        title=task.title,
+        description=task.description,
+        assignee_id=task.assignee,
+        due_date=task.due_date.isoformat(),
+        status=task.status,
+        team_id=task.team_id
+    )
 
 @router.patch("/{task_id}")
 async def update_tasks(
@@ -39,9 +70,18 @@ async def update_tasks(
     user: ManagerDep,
     task: TaskDep,
     task_service_dep: TaskServiceDep,
-    data: TaskUpdate
+    data: UpdateTask
 ):
-    return await task_service_dep.update_task(data, task, user, team)
+    task = await task_service_dep.update_task(data, task, user, team)
+    return ResponseTaskSchema(
+        id=task.id,
+        title=task.title,
+        description=task.description,
+        assignee_id=task.assignee,
+        due_date=task.due_date.isoformat(),
+        status=task.status,
+        team_id=task.team_id
+    )
 
 @router.delete("/{task_id}")
 async def delete_tasks(
@@ -50,4 +90,8 @@ async def delete_tasks(
     task: TaskDep,
     task_service_dep: TaskServiceDep
 ):
-    return await task_service_dep.delete_task(task, user, team)
+    result = await task_service_dep.delete_task(task, user, team)
+    if result:
+        return ResponseOperationSuccess()
+    else:
+        return ResponseOperationFailure()

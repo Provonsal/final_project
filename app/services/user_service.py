@@ -1,9 +1,5 @@
-import datetime
-from typing import Annotated
-from uuid import UUID, uuid4
+from uuid import UUID
 
-from fastapi import Depends, HTTPException, Response
-from fastapi.security import OAuth2PasswordRequestForm
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import NoResultFound
@@ -12,12 +8,11 @@ from app.exc.exceptions import WrongInputError
 from app.models.RoleEnum import RoleEnum
 from app.models.models import User, UserCredentials
 
-from app.repositories.refresh_token import RefreshTokenRepo
 from app.repositories.user import UserRepo
 
-from app.schemas.user_me import UserMeResponse
-from app.schemas.user_register import UserRegister
-from app.schemas.user_response import UserResponse
+from app.schemas.response_user_me import ResponseUserMe
+from app.schemas.register_user import UserRegister
+from app.schemas.response_register_user import ResponseUser
 
 from utils.password_manager import PWDManager
 
@@ -81,25 +76,8 @@ class UserService:
         await self.user_repo.create_creds(new_user_creds)
         await self.session.commit()
 
-        return UserResponse(
-            login=user.username,
-            message="Регистрация успешна",
-            role=role.value
-        )
+        return new_user
         
-
-    async def me(self, current_user: User):
-        """
-        Возвращает профиль текущего пользователя.
-
-        Аргументы:
-            current_user: Аутентифицированный пользователь.
-
-        Возвращает:
-            UserMeResponse: Данные текущего пользователя (id, username, role).
-        """
-        
-        return UserMeResponse(id=current_user.id,username=current_user.email, role=current_user.role.value)
 
     async def get_user(self, user_id: UUID):
         """

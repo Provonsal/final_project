@@ -1,14 +1,14 @@
 from pydantic import BaseModel
 
 
-class OperationResult(BaseModel):
+class ResponseOperationResult(BaseModel):
     message: str = ""
     status: str
 
-class OperationSuccess(OperationResult):
+class ResponseOperationSuccess(ResponseOperationResult):
     message: str = "Operation completed successfully"
     status: str = "success"
 
-class OperationFailure(OperationResult):
+class ResponseOperationFailure(ResponseOperationResult):
     message: str = "Operation failed"
     status: str = "failure"

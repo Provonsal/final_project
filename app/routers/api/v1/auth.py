@@ -5,7 +5,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import status
 
 from app.dependencies import AuthServiceDep, PasswordManagerDep, TokenManagerDep, UserServiceDep, CurrentUserDep
-from app.schemas.user_register import UserRegister
+from app.schemas.register_user import UserRegister
+from app.schemas.response_register_user import ResponseUser
 
 
 router = APIRouter(
@@ -32,5 +33,11 @@ async def register(
     pwd_manager: PasswordManagerDep
 ):
     
-    return await user_service.register(user, pwd_manager)
+    new_user = await user_service.register(user, pwd_manager)
+    
+    return ResponseUser(
+        login=user.username,
+        message="Регистрация успешна",
+        role=new_user.role.value
+    )
     

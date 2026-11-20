@@ -1,20 +1,13 @@
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from functools import wraps
 from inspect import signature
-import uuid
 
-from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.exc.exceptions import AuthorizationError, WrongInputError
-from app.models import RoleEnum
-from app.models.models import Meeting, Task, Team, TeamInviteCode, TeamUser, User
+from app.models.models import Task, Team, User
 from app.repositories.meet import MeetingRepo
 from app.repositories.team import TeamRepo
-from app.repositories.team_invite_code import TeamInviteCodeRepo
-from app.repositories.user import UserRepo
-from app.schemas.create_meeting import MeetingCreate
-from app.schemas.update_meeting import MeetingUpdate
 
 
 def requires_access(method):

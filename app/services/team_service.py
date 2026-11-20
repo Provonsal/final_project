@@ -1,18 +1,15 @@
-import uuid
 
-from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.exc.exceptions import AuthorizationError, BusinessRuleError
 from app.models import RoleEnum
-from app.models.models import Team, TeamInviteCode, TeamUser, User
+from app.models.models import Team, TeamInviteCode, User
 from app.repositories.team import TeamRepo
 from app.repositories.team_invite_code import TeamInviteCodeRepo
 from app.repositories.user import UserRepo
-from app.schemas.create_team import TeamCreate
-from app.schemas.task_create import TaskCreate
-from app.schemas.update_team import TeamUpdate
-from app.schemas.success import OperationSuccess
+from app.schemas.create_team import CreateTeam
+from app.schemas.update_team import UpdateTeam
+from app.schemas.response_success import ResponseOperationSuccess
 
 
 class TeamService:
@@ -44,7 +41,8 @@ class TeamService:
         if user.role not in (RoleEnum.MANAGER, RoleEnum.MEMBER):
             raise AuthorizationError(message="You are not allowed to do that.")
         
-        return await self.team_repo.get_teams(user.id)
+        teams = await self.team_repo.get_teams(user.id)
+        return teams
 
     async def get_team_users(self, team: Team, user: User):
         """
@@ -76,7 +74,7 @@ class TeamService:
         
         return members_list
 
-    async def update(self, team: Team, user: User, data: TeamUpdate):
+    async def update(self, team: Team, user: User, data: UpdateTeam):
         """
         Частично обновляет команду.
 
@@ -126,7 +124,7 @@ class TeamService:
             user: Пользователь, выполняющий удаление.
 
         Возвращает:
-            OperationSuccess: Результат успешной операции.
+            ResponseOperationSuccess: Результат успешной операции.
 
         Исключения:
             AuthorizationError: Если пользователь не состоит в команде.
@@ -148,7 +146,7 @@ class TeamService:
 
         await self.team_repo.delete(team)
         await self.session.commit()
-        return OperationSuccess()
+        return True
 
 
     async def get_team(self, team: Team, user: User):
@@ -186,7 +184,7 @@ class TeamService:
             invite_code: Строковый код приглашения.
 
         Возвращает:
-            OperationSuccess: Результат успешной операции.
+            ResponseOperationSuccess: Результат успешной операции.
 
         Исключения:
             BusinessRuleError: Если invite-код неактивен.
@@ -214,7 +212,7 @@ class TeamService:
         await self.team_repo.join_team(code.connected_to, user.id)
         
         await self.session.commit()
-        return OperationSuccess()
+        return True
 
     async def leave_team(self, user: User, team: Team):
         """
@@ -225,7 +223,7 @@ class TeamService:
             team: Команда, которую нужно покинуть.
 
         Возвращает:
-            OperationSuccess: Результат успешной операции.
+            ResponseOperationSuccess: Результат успешной операции.
 
         Исключения:
             AuthorizationError: Если пользователь не состоит в команде.
@@ -260,9 +258,9 @@ class TeamService:
             await self.user_repo.change_role(user.id, RoleEnum.AUTH)
         
         await self.session.commit()
-        return OperationSuccess()
+        return True
 
-    async def create_team(self, user: User, data: TeamCreate):
+    async def create_team(self, user: User, data: CreateTeam):
         """
         Создает новую команду и invite-код для нее.
 
@@ -331,7 +329,7 @@ class TeamService:
             user: Пользователь, создающий invite-код.
 
         Возвращает:
-            OperationSuccess: Результат успешной операции.
+            ResponseOperationSuccess: Результат успешной операции.
 
         Исключения:
             AuthorizationError: Если команда не принадлежит пользователю.
@@ -359,7 +357,7 @@ class TeamService:
 
         await self.team_invite_code_repo.create(new_invite_code)
         await self.session.commit()
-        return OperationSuccess()
+        return new_invite_code
 
     async def get_invite_code(self, team: Team, user: User):
         """Возвращает invite-код команды.

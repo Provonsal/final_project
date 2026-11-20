@@ -5,9 +5,11 @@
 from fastapi import APIRouter
 
 from app.dependencies import ManagerDep, MeetingDep, MeetingServiceDep, MemberOrManagerDep, TeamDep
-from app.schemas.create_meeting import MeetingCreate
-from app.schemas.return_meeting import ReturnMeetingSchema
-from app.schemas.update_meeting import MeetingUpdate
+from app.schemas.create_meeting import CreateMeeting
+from app.schemas.response_invite_code import ResponseInviteCodeSchema
+from app.schemas.response_meeting import ResponseMeetingSchema
+from app.schemas.response_success import ResponseOperationFailure, ResponseOperationSuccess
+from app.schemas.update_meeting import UpdateMeeting
 
 
 router = APIRouter()
@@ -17,16 +19,17 @@ async def create_meetings(
     team: TeamDep,
     user: ManagerDep,
     meeting_service_dep: MeetingServiceDep,
-    data: MeetingCreate
+    data: CreateMeeting
 ): 
     new_meeting = await meeting_service_dep.create_meeting(data, team, user)
-    invite_code_body = await meeting_service_dep.get_invite_code(team, new_meeting, user)
-    await meeting_service_dep.join_meeting(team, invite_code_body, user)
-    return ReturnMeetingSchema(
+    invite_code = await meeting_service_dep.get_invite_code(team, new_meeting, user)
+    await meeting_service_dep.join_meeting(team, invite_code.body, user)
+    return ResponseMeetingSchema(
         id=new_meeting.id,
         start_time=new_meeting.starts_at.isoformat(),
         end_time=new_meeting.ends_at.isoformat(),
-        team_id=new_meeting.related_team
+        team_id=new_meeting.related_team,
+        creator=new_meeting.creator
     )
         
 
@@ -36,7 +39,14 @@ async def read_meetings(
     user: MemberOrManagerDep,
     meeting_service_dep: MeetingServiceDep,
 ):
-    return await meeting_service_dep.get_meetings(team, user)
+    meetings = await meeting_service_dep.get_meetings(team, user)
+    return [ResponseMeetingSchema(
+        id=meeting.id,
+        start_time=meeting.starts_at.isoformat(),
+        end_time=meeting.ends_at.isoformat(),
+        team_id=meeting.related_team,
+        creator=meeting.creator
+    ) for meeting in meetings]
 
 @router.post("/join")
 async def join_meeting(
@@ -45,7 +55,12 @@ async def join_meeting(
     code: str,
     meeting_service_dep: MeetingServiceDep,
 ):
-    return await meeting_service_dep.join_meeting(team, code, user)
+    result = await meeting_service_dep.join_meeting(team, code, user)
+
+    if result:
+        return ResponseOperationSuccess()
+    else:
+        return ResponseOperationFailure()
 
 @router.get("/{meeting_id}/invite_code")
 async def get_invite_code(
@@ -54,7 +69,14 @@ async def get_invite_code(
     meeting: MeetingDep,
     meeting_service_dep: MeetingServiceDep,
 ):
-    return await meeting_service_dep.get_invite_code(team, meeting, user)
+    code = await meeting_service_dep.get_invite_code(team, meeting, user)
+    return ResponseInviteCodeSchema(
+        id=code.id,
+        code=code.body,
+        team_id=code.connected_to,
+        is_active=code.active,
+        creator=code.creator
+    )
 
 @router.post("/{meeting_id}/invite_code")
 async def create_invite_code(
@@ -66,7 +88,14 @@ async def create_invite_code(
 ):
     if uses is None:
         uses = -1  # -1 означает неограниченное количество использований
-    return await meeting_service_dep.create_invite_code(team, meeting, user, uses)
+    code = await meeting_service_dep.create_invite_code(team, meeting, user, uses)
+    return ResponseInviteCodeSchema(
+        id=code.id,
+        code=code.body,
+        team_id=code.connected_to,
+        is_active=code.active,
+        creator=code.creator
+    )
 
 @router.post("/{meeting_id}/leave")
 async def leave_meeting(
@@ -75,7 +104,11 @@ async def leave_meeting(
     meeting: MeetingDep,
     meeting_service_dep: MeetingServiceDep,
 ):
-    return await meeting_service_dep.leave_meeting(team, meeting, user)
+    result = await meeting_service_dep.leave_meeting(team, meeting, user)
+    if result:
+        return ResponseOperationSuccess()
+    else:
+        return ResponseOperationFailure()
 
 @router.get("/{meeting_id}")
 async def read_meeting(
@@ -84,7 +117,14 @@ async def read_meeting(
     meeting: MeetingDep,
     meeting_service_dep: MeetingServiceDep,
 ): 
-    return await meeting_service_dep.get_meeting(meeting, team, user)
+    meeting = await meeting_service_dep.get_meeting(meeting, team, user)
+    return ResponseMeetingSchema(
+        id=meeting.id,
+        start_time=meeting.starts_at.isoformat(),
+        end_time=meeting.ends_at.isoformat(),
+        team_id=meeting.related_team,
+        creator=meeting.creator
+    )
 
 @router.patch("/{meeting_id}")
 async def update_meeting(
@@ -92,9 +132,16 @@ async def update_meeting(
     user: ManagerDep,
     meeting: MeetingDep,
     meeting_service_dep: MeetingServiceDep,
-    data: MeetingUpdate
+    data: UpdateMeeting
 ): 
-    return await meeting_service_dep.update(meeting, team, data, user)
+    meeting = await meeting_service_dep.update(meeting, team, data, user)
+    return ResponseMeetingSchema(
+        id=meeting.id,
+        start_time=meeting.starts_at.isoformat(),
+        end_time=meeting.ends_at.isoformat(),
+        team_id=meeting.related_team,
+        creator=meeting.creator
+    )
     
 
 @router.delete("/{meeting_id}")
@@ -104,4 +151,8 @@ async def delete_meeting(
     meeting: MeetingDep,
     meeting_service_dep: MeetingServiceDep,
 ):
-    return await meeting_service_dep.delete(meeting, team, user)
+    result = await meeting_service_dep.delete(meeting, team, user)
+    if result:
+        return ResponseOperationSuccess()
+    else:
+        return ResponseOperationFailure()

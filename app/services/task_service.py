@@ -1,23 +1,16 @@
-from datetime import datetime
-import uuid
 
-from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import NoResultFound
 
-from app.exc.exceptions import AuthorizationError, NotFoundError, WrongInputError
+from app.exc.exceptions import AuthorizationError, WrongInputError
 from app.models import RateEnum, RoleEnum
-from app.models.TaskStatusEnum import TaskStatusEnum
-from app.models.models import Task, TaskRate, Team, TeamInviteCode, TeamUser, User
+from app.models.models import Task, TaskRate, Team, User
 
 from app.repositories.evaluation import EvaluationRepo
 from app.repositories.task import TaskRepo
 from app.repositories.team import TeamRepo
-from app.repositories.team_invite_code import TeamInviteCodeRepo
 from app.repositories.user import UserRepo
-from app.schemas.success import OperationSuccess
-from app.schemas.task_create import TaskCreate
-from app.schemas.task_update import TaskUpdate
+from app.schemas.create_task import CreateTask
+from app.schemas.update_task import UpdateTask
 
 
 class TaskService:
@@ -30,7 +23,7 @@ class TaskService:
         self.user_repo = UserRepo(session)
         self.evaluation_repo = EvaluationRepo(session)
 
-    async def create_task(self, data: TaskCreate, team: Team, user: User):
+    async def create_task(self, data: CreateTask, team: Team, user: User):
         """
         Создает задачу в команде и назначает ее участнику команды.
 
@@ -91,6 +84,7 @@ class TaskService:
         await self.evaluation_repo.create(unrated_rate)
 
         await self.session.commit()
+
         return new_task
 
     async def get_all_tasks(self, team: Team, user: User):
@@ -120,9 +114,11 @@ class TaskService:
             raise AuthorizationError(message="You are not allowed to do that.")
 
         if user.role == RoleEnum.MANAGER:
-            return await self.task_repo.get_all_tasks(team.id)
+            tasks = await self.task_repo.get_all_tasks(team.id)
         else:
-            return await self.task_repo.get_all_tasks_for_user(team.id, user.id)
+            tasks = await self.task_repo.get_all_tasks_for_user(team.id, user.id)
+
+        return tasks
 
 
     async def get_task(self, task: Task, team: Team, user: User):
@@ -160,7 +156,7 @@ class TaskService:
 
         return task
     
-    async def update_task(self, data: TaskUpdate, task: Task, user: User, team: Team):
+    async def update_task(self, data: UpdateTask, task: Task, user: User, team: Team):
         """
         Частично обновляет задачу.
 
@@ -216,7 +212,7 @@ class TaskService:
             team: Команда, к которой должна относиться задача.
 
         Возвращает:
-            OperationSuccess: Результат успешной операции.
+            ResponseOperationSuccess: Результат успешной операции.
 
         Исключения:
             AuthorizationError: Если пользователь не состоит в команде.
@@ -240,8 +236,9 @@ class TaskService:
 
         if user.role != RoleEnum.MANAGER:
             raise AuthorizationError(message="You are not allowed to do that.")
+
         
         
         await self.task_repo.delete(task)
         await self.session.commit()
-        return OperationSuccess()
+        return True

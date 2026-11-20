@@ -1,21 +1,15 @@
 from datetime import UTC, datetime
-import uuid
 
-from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.exc.exceptions import AuthorizationError, WrongInputError, BusinessRuleError
 from app.models.RoleEnum import RoleEnum
-from app.models.models import Meeting, MeetingInviteCode, Team, TeamInviteCode, TeamUser, User
+from app.models.models import Meeting, MeetingInviteCode, Team, User
 from app.repositories.meet import MeetingRepo
 from app.repositories.meeting_invite_code import MeetingInviteCodeRepo
 from app.repositories.team import TeamRepo
-from app.repositories.team_invite_code import TeamInviteCodeRepo
-from app.repositories.user import UserRepo
-from app.schemas.create_meeting import MeetingCreate
-from app.schemas.success import OperationFailure, OperationSuccess
-from app.schemas.update_meeting import MeetingUpdate
-from sqlalchemy.exc import NoResultFound
+from app.schemas.create_meeting import CreateMeeting
+from app.schemas.update_meeting import UpdateMeeting
 
 
 class MeetingService:
@@ -85,7 +79,7 @@ class MeetingService:
 
         return meeting
 
-    async def create_meeting(self, data: MeetingCreate, team: Team, user: User):
+    async def create_meeting(self, data: CreateMeeting, team: Team, user: User):
         """
         Создает встречу в команде.
 
@@ -158,7 +152,7 @@ class MeetingService:
         await self.session.commit()
         return new_meeting
 
-    async def update(self, meeting: Meeting, team: Team, data: MeetingUpdate, user: User):
+    async def update(self, meeting: Meeting, team: Team, data: UpdateMeeting, user: User):
         """
         Частично обновляет встречу.
 
@@ -220,7 +214,7 @@ class MeetingService:
             user: Пользователь, выполняющий удаление.
 
         Возвращает:
-            OperationSuccess: Результат успешной операции.
+            ResponseOperationSuccess: Результат успешной операции.
 
         Исключения:
             AuthorizationError: Если пользователь не состоит в команде.
@@ -252,7 +246,7 @@ class MeetingService:
         
         await self.meeting_repo.delete(meeting)
         await self.session.commit()
-        return OperationSuccess()
+        return True
 
     async def join_meeting(self, team: Team, invite_code: str, user: User):
         """
@@ -303,7 +297,7 @@ class MeetingService:
 
         await self.meeting_repo.add_participant(code.meeting, user)
         await self.session.commit()
-        return OperationSuccess()
+        return True
 
     async def leave_meeting(self, team: Team, meeting: Meeting, user: User):
         """
@@ -341,10 +335,10 @@ class MeetingService:
         result = await self.meeting_repo.remove_participant(meeting, user)
         if result:
             await self.session.commit()
-            return OperationSuccess()
+            return True
         else:
             await self.session.rollback()
-            return OperationFailure(message="Failed to leave the meeting. You might not be a participant.", status="failure")
+            return False
 
     async def create_invite_code(self, team: Team, meeting: Meeting, user: User, uses: int):
         """
@@ -388,7 +382,7 @@ class MeetingService:
         )
         await self.meeting_invite_code_repo.create(new_invite_code)
         await self.session.commit()
-        return new_invite_code.body
+        return new_invite_code
 
     async def get_invite_code(self, team: Team, meeting: Meeting, user: User):
         """
@@ -420,4 +414,4 @@ class MeetingService:
             raise AuthorizationError(message="You do not have permission to get an invite code for this meeting.")
 
         invite_code = await self.meeting_invite_code_repo.get_by_meeting_id(meeting.id)
-        return invite_code.body
+        return invite_code
