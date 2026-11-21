@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.models.RateEnum import RateEnum
 
@@ -10,10 +10,10 @@ class UpdateEvaluation(BaseModel):
 
     Все поля являются опциональными (можно обновлять часть полей).
 
-    Attributes:
+    Args:
         rate: Новое значение оценки (Enum: excellent, good, neutral, poor)
 
     Example:
-        UpdateEvaluation(rate=RateEnum.excellent)
+        rate: "excellent"
     """
-    rate: RateEnum | None = None
+    rate: RateEnum | None = Field(None, description="Новое значение оценки")

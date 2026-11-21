@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class UpdateTeam(BaseModel):
@@ -8,12 +8,13 @@ class UpdateTeam(BaseModel):
 
     Все поля являются опциональными (можно обновлять часть полей).
 
-    Attributes:
+    Args:
         name: Новое название команды
         max_per_team: Новое максимальное количество участников команды
 
     Example:
-        UpdateTeam(name="Updated Team Name")
+        name: "Новое название команды"
+        max_per_team: 20
     """
-    name: str | None = None
-    max_per_team: int | None = None
+    name: str | None = Field(None, description="Новое название команды")
+    max_per_team: int | None = Field(None, description="Новое максимальное количество участников команды")

@@ -1,15 +1,15 @@
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class CreateComment(BaseModel):
     """
     Схема для создания нового комментария.
 
-    Attributes:
+    Args:
         text: Текст комментария
 
     Example:
-        CreateComment(text="Great job!")
+        text: "Отличная работа!"
     """
-    text: str
+    text: str = Field(..., description="Текст комментария")

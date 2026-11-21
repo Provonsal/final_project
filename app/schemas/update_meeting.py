@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class UpdateMeeting(BaseModel):
@@ -9,14 +9,16 @@ class UpdateMeeting(BaseModel):
 
     Все поля являются опциональными (можно обновлять часть полей).
 
-    Attributes:
+    Args:
         starts_at: Новое время начала совещания
         ends_at: Новое время окончания совещания
         max_members: Новое максимальное количество участников совещания
 
     Example:
-        UpdateMeeting(starts_at="2023-12-31T10:00:00", ends_at="2023-12-31T11:00:00")
+        starts_at: "2023-12-31T10:00:00"
+        ends_at: "2023-12-31T11:00:00"
+        max_members: 20
     """
-    starts_at: datetime | None = None
-    ends_at: datetime | None = None
-    max_members: int | None = None
+    starts_at: datetime | None = Field(None, description="Новое время начала совещания")
+    ends_at: datetime | None = Field(None, description="Новое время окончания совещания")
+    max_members: int | None = Field(None, description="Новое максимальное количество участников совещания")

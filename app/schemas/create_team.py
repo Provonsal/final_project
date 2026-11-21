@@ -1,16 +1,17 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class CreateTeam(BaseModel):
     """
     Схема для создания новой команды.
 
-    Attributes:
+    Args:
         name: Название команды
         max_per_team: Максимальное количество участников команды (по умолчанию 10)
 
     Example:
-        CreateTeam(name="My Team")
+        name: "Development Team"
+        max_per_team: 10
     """
-    name: str
-    max_per_team: int = 10
+    name: str = Field(..., description="Название команды")
+    max_per_team: int = Field(default=10, description="Максимальное количество участников команды")

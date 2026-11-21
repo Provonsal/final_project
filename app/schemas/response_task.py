@@ -1,6 +1,6 @@
 import uuid
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.models import TaskStatusEnum
 
@@ -9,7 +9,7 @@ class ResponseTaskSchema(BaseModel):
     """
     Схема ответа с информацией о задаче.
 
-    Attributes:
+    Args:
         id: Уникальный идентификатор задачи
         title: Название задачи
         description: Описание задачи
@@ -19,20 +19,18 @@ class ResponseTaskSchema(BaseModel):
         team_id: Уникальный идентификатор команды задачи
 
     Example:
-        ResponseTaskSchema(
-            id=uuid.uuid4(),
-            title="Design Review",
-            description="Review the UI design",
-            assignee_id=uuid.uuid4(),
-            due_date="2023-12-31T10:00:00",
-            status=TaskStatusEnum.active,
-            team_id=uuid.uuid4()
-        )
+        id: "550e8400-e29b-41d4-a716-446655440000"
+        title: "Обзор дизайна"
+        description: "Проверить дизайн интерфейса"
+        assignee_id: "550e8400-e29b-41d4-a716-446655440001"
+        due_date: "2023-12-31T10:00:00"
+        status: "active"
+        team_id: "550e8400-e29b-41d4-a716-446655440002"
     """
-    id: uuid.UUID
-    title: str
-    description: str
-    assignee_id: uuid.UUID
-    due_date: str
-    status: TaskStatusEnum
-    team_id: uuid.UUID
+    id: uuid.UUID = Field(..., description="Уникальный идентификатор задачи")
+    title: str = Field(..., description="Название задачи")
+    description: str = Field(..., description="Описание задачи")
+    assignee_id: uuid.UUID = Field(..., description="Уникальный идентификатор исполнителя задачи")
+    due_date: str = Field(..., description="Дата выполнения задачи (ISO format)")
+    status: TaskStatusEnum = Field(..., description="Статус задачи")
+    team_id: uuid.UUID = Field(..., description="Уникальный идентификатор команды задачи")

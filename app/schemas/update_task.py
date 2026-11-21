@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.models import TaskStatusEnum
 
@@ -11,16 +11,19 @@ class UpdateTask(BaseModel):
 
     Все поля являются опциональными (можно обновлять часть полей).
 
-    Attributes:
+    Args:
         title: Новое название задачи
         description: Новое описание задачи
         due_date: Новая дата выполнения задачи
         status: Новый статус задачи
 
     Example:
-        UpdateTask(title="Updated Task", due_date="2023-12-31")
+        title: "Обновлённое название"
+        description: "Новое описание задачи"
+        due_date: "2024-01-15T10:00:00"
+        status: "done"
     """
-    title: str | None = None
-    description: str | None = None
-    due_date: datetime | None = None
-    status: TaskStatusEnum | None = None
+    title: str | None = Field(None, description="Новое название задачи")
+    description: str | None = Field(None, description="Новое описание задачи")
+    due_date: datetime | None = Field(None, description="Новая дата выполнения задачи")
+    status: TaskStatusEnum | None = Field(None, description="Новый статус задачи")

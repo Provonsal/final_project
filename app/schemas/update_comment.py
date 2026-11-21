@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class UpdateComment(BaseModel):
@@ -8,10 +8,10 @@ class UpdateComment(BaseModel):
 
     Все поля являются опциональными (можно обновлять часть полей).
 
-    Attributes:
+    Args:
         text: Новый текст комментария
 
     Example:
-        UpdateComment(text="Updated comment text")
+        text: "Обновлённый текст комментария"
     """
-    text: str | None = None
+    text: str | None = Field(None, description="Новый текст комментария")

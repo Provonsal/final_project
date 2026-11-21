@@ -1,22 +1,20 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ResponseToken(BaseModel):
     """
     Схема ответа с токенами авторизации.
 
-    Attributes:
+    Args:
         access_token: Строка с access-токеном
         refresh_token: Строка с refresh-токеном
         token_type: Тип токена (обычно "bearer")
 
     Example:
-        ResponseToken(
-            access_token="eyJhbGc...",
-            refresh_token="eyJhbGc...",
-            token_type="bearer"
-        )
+        access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        token_type: "bearer"
     """
-    access_token: str
-    refresh_token: str
-    token_type: str = "bearer"
+    access_token: str = Field(..., description="Строка с access-токеном")
+    refresh_token: str = Field(..., description="Строка с refresh-токеном")
+    token_type: str = Field(default="bearer", description="Тип токена")
