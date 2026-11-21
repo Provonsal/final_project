@@ -119,7 +119,8 @@ class AuthService:
                 )
 
             try:
-                ref_db_token = await self.refresh_repo.get_by_hash(refresh_data.refresh_token)
+                
+                ref_db_token = await self.refresh_repo.get_by_hash(tkn_manager.hash_token(refresh_data.refresh_token))
 
             except:
                 raise WrongInputError(

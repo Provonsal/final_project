@@ -8,15 +8,37 @@ from app.schemas.response_user import ResponseUserSchema
 from app.schemas.update_team import UpdateTeam
 
 router = APIRouter()
+"""
+API роутер для управления командами.
+
+Этот роутер предоставляет эндпоинты для создания, управления и взаимодействия с командами.
+"""
 
 
 
 @router.post("/")
 async def create_team(
-    user: ManagerDep, 
+    user: ManagerDep,
     team_service_dep: TeamServiceDep,
     data: CreateTeam
 ):
+    """
+    Создает новую команду.
+
+    Только менеджер может создать команду. После создания создает invite-код для приглашения участников.
+
+    Аргументы:
+        user (User): Модели менеджер, создающий команду
+        team_service_dep (TeamService): Сервис для работы с командами
+        data (CreateTeam): Данные для создания команды
+
+    Возвращает:
+        ResponseTeamSchema: Информация о созданной команде
+
+    Пример:
+        POST /api/v1/teams/
+        Body: {"name": "My Team"}
+    """
     new_team = await team_service_dep.create_team(user, data)
     invite_code = await team_service_dep.get_invite_code(new_team, user)
     await team_service_dep.join_team(user, invite_code.body)
@@ -29,11 +51,25 @@ async def create_team(
 
 @router.post("/join")
 async def join(
-    invite_code: str, 
-    current_user: AnyAuthDep, 
+    invite_code: str,
+    current_user: AnyAuthDep,
     team_dep: TeamServiceDep
 ):
-    
+    """
+    Присоединяет пользователя к команде по invite-коду.
+
+    Аргументы:
+        invite_code (str): Invite-код для участия в команде
+        current_user (User): Текущий авторизованный пользователь
+        team_dep (TeamService): Сервис для работы с командами
+
+    Возвращает:
+        ResponseOperationSuccess | ResponseOperationFailure: Результат операции
+
+    Пример:
+        POST /api/v1/teams/join
+        Body: {"invite_code": "ABC123"}
+    """
     result = await team_dep.join_team(current_user, invite_code)
     if result:
         return ResponseOperationSuccess()
@@ -42,10 +78,26 @@ async def join(
 
 @router.post("/code")
 async def get_invite_code(
-    team: TeamDep, 
-    user: ManagerDep, 
+    team: TeamDep,
+    user: ManagerDep,
     team_service_dep: TeamServiceDep
 ):
+    """
+    Генерирует invite-код для команды.
+
+    Только менеджер может создавать invite-коды.
+
+    Аргументы:
+        team (Team): Команда для создания invite-кода
+        user (User): Модели менеджер команды
+        team_service_dep (TeamService): Сервис для работы с командами
+
+    Возвращает:
+        ResponseInviteCodeSchema: Invite-код с деталями
+
+    Пример:
+        POST /api/v1/teams/code
+    """
     invite_code = await team_service_dep.get_invite_code(team, user)
     return ResponseInviteCodeSchema(
         id=invite_code.id,
@@ -61,6 +113,20 @@ async def leave(
     team: TeamDep,
     team_dep: TeamServiceDep
 ):
+    """
+    Удаляет пользователя из команды.
+
+    Аргументы:
+        current_user (User): Текущий пользователь
+        team (Team): Команда, из которой выходит пользователь
+        team_dep (TeamService): Сервис для работы с командами
+
+    Возвращает:
+        ResponseOperationSuccess | ResponseOperationFailure: Результат операции
+
+    Пример:
+        POST /api/v1/teams/{team_id}/leave
+    """
     result = await team_dep.leave_team(current_user, team)
     if result:
         return ResponseOperationSuccess()
@@ -69,9 +135,22 @@ async def leave(
 
 @router.get("/")
 async def read_teams(
-    user: MemberOrManagerDep, 
+    user: MemberOrManagerDep,
     team_service_dep: TeamServiceDep,
 ):
+    """
+    Получает список команд пользователя.
+
+    Аргументы:
+        user (User): Текущий пользователь
+        team_service_dep (TeamService): Сервис для работы с командами
+
+    Возвращает:
+        list[ResponseTeamSchema]: Список команд пользователя
+
+    Пример:
+        GET /api/v1/teams/
+    """
     teams = await team_service_dep.get_teams(user)
     return [
         ResponseTeamSchema(
@@ -84,10 +163,24 @@ async def read_teams(
 
 @router.get("/{team_id}")
 async def read_team(
-    user: MemberOrManagerDep, 
+    user: MemberOrManagerDep,
     team_service_dep: TeamServiceDep,
     team: TeamDep,
 ):
+    """
+    Получает информацию о команде.
+
+    Аргументы:
+        user (User): Текущий пользователь (для проверки прав доступа)
+        team_service_dep (TeamService): Сервис для работы с командами
+        team (Team): Запрашиваемая команда
+
+    Возвращает:
+        ResponseTeamSchema: Информация о команде
+
+    Пример:
+        GET /api/v1/teams/{team_id}
+    """
     team = await team_service_dep.get_team(team, user)
     return ResponseTeamSchema(
         id=team.id,
@@ -98,11 +191,29 @@ async def read_team(
 
 @router.patch("/{team_id}")
 async def update_team(
-    user: ManagerDep, 
+    user: ManagerDep,
     team_service_dep: TeamServiceDep,
     team: TeamDep,
     data: UpdateTeam
 ):
+    """
+    Обновляет информацию о команде.
+
+    Только менеджер может обновлять информацию о команде.
+
+    Аргументы:
+        user (User): Модели менеджер команды
+        team_service_dep (TeamService): Сервис для работы с командами
+        team (Team): Обновляемая команда
+        data (UpdateTeam): Новые данные команды
+
+    Возвращает:
+        ResponseTeamSchema: Обновленная информация о команде
+
+    Пример:
+        PATCH /api/v1/teams/{team_id}
+        Body: {"name": "Updated Team Name"}
+    """
     team = await team_service_dep.update(team, user, data)
     return ResponseTeamSchema(
         id=team.id,
@@ -113,10 +224,26 @@ async def update_team(
 
 @router.delete("/{team_id}")
 async def delete_team(
-    user: ManagerDep, 
+    user: ManagerDep,
     team_service_dep: TeamServiceDep,
     team: TeamDep
 ):
+    """
+    Удаляет команду.
+
+    Только менеджер может удалить свою команду.
+
+    Аргументы:
+        user (User): Модели менеджер команды
+        team_service_dep (TeamService): Сервис для работы с командами
+        team (Team): Удаляемая команда
+
+    Возвращает:
+        ResponseOperationSuccess | ResponseOperationFailure: Результат операции
+
+    Пример:
+        DELETE /api/v1/teams/{team_id}
+    """
     result = await team_service_dep.delete(team, user)
     if result:
         return ResponseOperationSuccess()
@@ -127,10 +254,23 @@ async def delete_team(
 @router.get("/{team_id}/members")
 async def members(
     team_service_dep: TeamServiceDep,
-    team: TeamDep, 
+    team: TeamDep,
     user: MemberOrManagerDep,
 ):
-    
+    """
+    Получает список участников команды.
+
+    Аргументы:
+        team_service_dep (TeamService): Сервис для работы с командами
+        team (Team): Команда
+        user (User): Текущий пользователь (для проверки прав доступа)
+
+    Возвращает:
+        list[ResponseUserSchema]: Список участников команды
+
+    Пример:
+        GET /api/v1/teams/{team_id}/members
+    """
     members_list = await team_service_dep.get_team_users(team, user)
     return [
         ResponseUserSchema(

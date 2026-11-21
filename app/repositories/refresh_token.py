@@ -19,8 +19,8 @@ class RefreshTokenRepo(BaseRepo[RefreshToken]):
     def __init__(self, session: AsyncSession):
         self.session = session
     
-    async def get_by_hash(self, hash: str):
-        return (await self.session.scalars(select(RefreshToken).where(RefreshToken.token_hash == TKNManager.hash_token(hash)))).one()
+    async def get_by_hash(self, hash: bytes):
+        return (await self.session.scalars(select(RefreshToken).where(RefreshToken.token_hash == hash))).one()
 
     async def update_revoke_all_else_for_user(self, user_id: uuid.UUID):
         await self.session.execute(update(RefreshToken).where(RefreshToken.user_id == user_id).values(revoked=True))

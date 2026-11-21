@@ -5,12 +5,34 @@ from app.schemas.response_user_me import ResponseUserMe
 
 
 router = APIRouter(
-    prefix="/users",  # Все пути будут начинаться с /users
-    tags=["users"],    # Тег для документации
-    responses={404: {"description": "Not found"}}  # Общие ответы
+    prefix="/users",
+    tags=["users"],
+    responses={404: {"description": "Not found"}}
 )
+"""
+API роутер для управления пользователями.
+
+Этот роутер предоставляет эндпоинты для работы с информацией о пользователе.
+"""
 
 @router.get("/me", status_code=status.HTTP_200_OK)
 async def me(current_user: AnyAuthDep, user_service: UserServiceDep):
-    return ResponseUserMe(id=current_user.id,username=current_user.email, role=current_user.role.value)
+    """
+    Получает информацию о текущем авторизованном пользователе.
+
+    Аргументы:
+        current_user (User): Текущий авторизованный пользователь
+        user_service (UserService): Сервис для работы с пользователями
+
+    Возвращает:
+        ResponseUserMe: Информация о текущем пользователе
+
+    Пример:
+        GET /api/v1/users/me
+    """
+    return ResponseUserMe(
+        id=current_user.id,
+        username=current_user.email,
+        role=current_user.role.value
+    )
 
