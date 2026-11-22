@@ -20,14 +20,14 @@ async def me(current_user: AnyAuthDep, user_service: UserServiceDep):
     """
     Получает информацию о текущем авторизованном пользователе.
 
-    Аргументы:
+    Args:
         current_user (User): Текущий авторизованный пользователь
         user_service (UserService): Сервис для работы с пользователями
 
-    Возвращает:
+    Returns:
         ResponseUserMe: Информация о текущем пользователе
 
-    Пример:
+    Example:
         GET /api/v1/users/me
     """
     return ResponseUserMe(

@@ -26,7 +26,7 @@ class TaskRepo(BaseRepo[Task]):
         """
         Инициализация репозитория задач.
 
-        Аргументы:
+        Args:
             session (AsyncSession): Асинхронная сессия базы данных
         """
         self.session = session
@@ -35,13 +35,13 @@ class TaskRepo(BaseRepo[Task]):
         """
         Получает все задачи принадлежащие команде.
 
-        Аргументы:
+        Args:
             team_id (uuid.UUID): Идентификатор команды
 
-        Возвращает:
+        Returns:
             list[Task]: Список всех задач команды
 
-        Пример:
+        Example:
             >>> repo = TaskRepo(session)
             >>> tasks = await repo.get_all_tasks(team_uuid)
         """
@@ -53,14 +53,14 @@ class TaskRepo(BaseRepo[Task]):
         """
         Получает все задачи, которые выполняет пользователь в команде.
 
-        Аргументы:
+        Args:
             team_id (uuid.UUID): Идентификатор команды
             user_id (uuid.UUID): Идентификатор пользователя
 
-        Возвращает:
+        Returns:
             list[Task]: Список задач, назначенных на пользователя
 
-        Пример:
+        Example:
             >>> repo = TaskRepo(session)
             >>> user_tasks = await repo.get_all_tasks_for_user(team_uuid, user_uuid)
         """

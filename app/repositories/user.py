@@ -24,7 +24,7 @@ class UserRepo(BaseRepo[User]):
         """
         Инициализация репозитория пользователей.
 
-        Аргументы:
+        Args:
             session (AsyncSession): Асинхронная сессия базы данных
         """
         self.session = session
@@ -33,16 +33,16 @@ class UserRepo(BaseRepo[User]):
         """
         Получает пользователя по логину (email).
 
-        Аргументы:
+        Args:
             login (str): Email пользователя
 
-        Возвращает:
+        Returns:
             User: Найденный пользователь с загрузкой учетных данных
 
-        Исключения:
+        Raises:
             NoResultFound: Если пользователь не найден
 
-        Пример:
+        Example:
             >>> repo = UserRepo(session)
             >>> user = await repo.get_by_login("user@example.com")
         """
@@ -57,10 +57,10 @@ class UserRepo(BaseRepo[User]):
         """
         Получает список пользователей, не являющихся менеджерами.
 
-        Возвращает:
+        Returns:
             list[User]: Список всех пользователей, кроме менеджеров
 
-        Пример:
+        Example:
             >>> repo = UserRepo(session)
             >>> users = await repo.get_users()
         """
@@ -74,14 +74,14 @@ class UserRepo(BaseRepo[User]):
         """
         Изменяет роль пользователя.
 
-        Аргументы:
+        Args:
             user_id (uuid.UUID): Идентификатор пользователя
             new_role (RoleEnum): Новая роль пользователя
 
         Побочные эффекты:
             Обновляет роль пользователя в базе данных
 
-        Пример:
+        Example:
             >>> repo = UserRepo(session)
             >>> await repo.change_role(user_uuid, RoleEnum.MEMBER)
         """
@@ -93,13 +93,13 @@ class UserRepo(BaseRepo[User]):
         """
         Создает учетные данные пользователя в базе данных.
 
-        Аргументы:
+        Args:
             user_creds_model_obj: Объект UserCredentials для создания
 
         Побочные эффекты:
             Добавляет объект в сессию и делает flush для генерации ID
 
-        Пример:
+        Example:
             >>> repo = UserRepo(session)
             >>> creds = UserCredentials(user_id=user_uuid, salt=salt, password_hash=hash)
             >>> await repo.create_creds(creds)
@@ -111,13 +111,13 @@ class UserRepo(BaseRepo[User]):
         """
         Проверяет, состоит ли пользователь в какой-либо команде.
 
-        Аргументы:
+        Args:
             user_id (uuid.UUID): Идентификатор пользователя
 
-        Возвращает:
+        Returns:
             bool: True, если пользователь состоит в хотя бы одной команде, иначе False
 
-        Пример:
+        Example:
             >>> repo = UserRepo(session)
             >>> is_member = await repo.are_user_in_any_group(user_uuid)
         """

@@ -25,7 +25,7 @@ class BaseRepo(Generic[ModelT]):
         """
         Инициализация репозитория.
 
-        Аргументы:
+        Args:
             session (AsyncSession): Асинхронная сессия базы данных
         """
         self.session = session
@@ -34,16 +34,16 @@ class BaseRepo(Generic[ModelT]):
         """
         Получает запись модели по ID.
 
-        Аргументы:
+        Args:
             id (uuid.UUID): Уникальный идентификатор записи
 
-        Возвращает:
+        Returns:
             ModelT: Найденная модель
 
-        Исключения:
+        Raises:
             NoResultFound: Если запись не найдена
 
-        Пример:
+        Example:
             >>> repo = TaskRepo(session)
             >>> task = await repo.get_by_id(task_id)
         """
@@ -55,14 +55,14 @@ class BaseRepo(Generic[ModelT]):
         """
         Обновляет запись модели по ID.
 
-        Аргументы:
+        Args:
             id (uuid.UUID): Уникальный идентификатор записи
             data (dict): Словарь с обновляемыми полями
 
-        Возвращает:
+        Returns:
             ModelT: Обновленная модель
 
-        Пример:
+        Example:
             >>> repo = TaskRepo(session)
             >>> updated_task = await repo.update(task_id, {"status": "done"})
         """
@@ -78,13 +78,13 @@ class BaseRepo(Generic[ModelT]):
         """
         Создает новую запись модели в базе данных.
 
-        Аргументы:
+        Args:
             model_obj (ModelT): Объект модели для создания
 
         Побочные эффекты:
             Добавляет объект в сессию и делает flush для генерации ID
 
-        Пример:
+        Example:
             >>> repo = TaskRepo(session)
             >>> task = Task(title="New task")
             >>> await repo.create(task)
@@ -96,13 +96,13 @@ class BaseRepo(Generic[ModelT]):
         """
         Удаляет запись модели из базы данных.
 
-        Аргументы:
+        Args:
             model_obj (ModelT): Объект модели для удаления
 
         Побочные эффекты:
             Удаляет объект из сессии
 
-        Пример:
+        Example:
             >>> repo = TaskRepo(session)
             >>> await repo.delete(task)
         """

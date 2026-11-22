@@ -26,7 +26,7 @@ class TeamRepo(BaseRepo[Team]):
         """
         Инициализация репозитория команд.
 
-        Аргументы:
+        Args:
             session (AsyncSession): Асинхронная сессия базы данных
         """
         self.session = session
@@ -35,13 +35,13 @@ class TeamRepo(BaseRepo[Team]):
         """
         Получает все команды, в которых состоит пользователь.
 
-        Аргументы:
+        Args:
             user_id (uuid.UUID): Идентификатор пользователя
 
-        Возвращает:
+        Returns:
             list[Team]: Список команд пользователя
 
-        Пример:
+        Example:
             >>> repo = TeamRepo(session)
             >>> teams = await repo.get_teams(user_uuid)
         """
@@ -57,13 +57,13 @@ class TeamRepo(BaseRepo[Team]):
         """
         Получает список участников команды.
 
-        Аргументы:
+        Args:
             id (uuid.UUID): Идентификатор команды
 
-        Возвращает:
+        Returns:
             list[User]: Список участников команды
 
-        Пример:
+        Example:
             >>> repo = TeamRepo(session)
             >>> members = await repo.get_team_users(team_uuid)
         """
@@ -83,18 +83,18 @@ class TeamRepo(BaseRepo[Team]):
         2. Отсутствие уже существующей связи
         3. Не превышение лимита участников команды
 
-        Аргументы:
+        Args:
             team_id (uuid.UUID): Идентификатор команды
             user_id (uuid.UUID): Идентификатор пользователя
 
-        Возвращает:
+        Returns:
             TeamUser: Созданная связь между командой и пользователем
 
-        Исключения:
+        Raises:
             ValueError: Если команда не найдена, пользователь уже в команде,
                       или команда переполнена
 
-        Пример:
+        Example:
             >>> repo = TeamRepo(session)
             >>> link = await repo.join_team(team_uuid, user_uuid)
         """
@@ -128,14 +128,14 @@ class TeamRepo(BaseRepo[Team]):
         """
         Удаляет пользователя из команды.
 
-        Аргументы:
+        Args:
             team_id (uuid.UUID): Идентификатор команды
             user_id (uuid.UUID): Идентификатор пользователя
 
-        Исключения:
+        Raises:
             ValueError: Если пользователь не состоит в команде
 
-        Пример:
+        Example:
             >>> repo = TeamRepo(session)
             >>> await repo.leave_team(team_uuid, user_uuid)
         """
@@ -151,14 +151,14 @@ class TeamRepo(BaseRepo[Team]):
         """
         Проверяет, состоит ли пользователь в команде.
 
-        Аргументы:
+        Args:
             team_id (uuid.UUID): Идентификатор команды
             user_id (uuid.UUID): Идентификатор пользователя
 
-        Возвращает:
+        Returns:
             bool: True, если пользователь состоит в команде, иначе False
 
-        Пример:
+        Example:
             >>> repo = TeamRepo(session)
             >>> is_member = await repo.belongs_to_team(team_uuid, user_uuid)
         """
@@ -171,14 +171,14 @@ class TeamRepo(BaseRepo[Team]):
         """
         Проверяет, все ли команды принадлежат указанному пользователю.
 
-        Аргументы:
+        Args:
             team_ids (list[uuid.UUID]): Список идентификаторов команд
             user_id (uuid.UUID): Идентификатор пользователя
 
-        Возвращает:
+        Returns:
             bool: True, если все команды принадлежат пользователю, иначе False
 
-        Пример:
+        Example:
             >>> repo = TeamRepo(session)
             >>> all_owned = await repo.are_owned_by_user([team1, team2], user_uuid)
         """
@@ -192,13 +192,13 @@ class TeamRepo(BaseRepo[Team]):
         """
         Проверяет, используется ли имя команды.
 
-        Аргументы:
+        Args:
             name (str): Имя команды для проверки
 
-        Возвращает:
+        Returns:
             bool: True, если имя занято, иначе False
 
-        Пример:
+        Example:
             >>> repo = TeamRepo(session)
             >>> name_taken = await repo.is_team_name_taken("My Team")
         """

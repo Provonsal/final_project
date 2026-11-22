@@ -39,7 +39,7 @@ async def root(
     Returns:
         List[ResponseMeetingSchema]: Список совещаний
 
-    Пример:
+    Example:
         GET /api/v1/calendar/{team_id}?date_from=2023-12-01&date_until=2023-12-31
     """
     meetings = await calendar_service_dep.get_meetings(team, user, date_from, date_until)

@@ -35,10 +35,10 @@ async def login(
     - Генерирует access token
     - Обновляет refresh token
 
-    Возвращает:
+    Returns:
         dict: Содержит tokens и информацию о пользователе
 
-    Пример:
+    Example:
         POST /api/v1/auth/login
         Body: {"username": "user@example.com", "password": "secret"}
     """
@@ -58,14 +58,14 @@ async def register(
     - Хэшированным паролем
     - Назначенной ролью по умолчанию
 
-    Возвращает:
+    Returns:
         ResponseUser: Информация о зарегистрированном пользователе
 
-    Пример:
+    Example:
         POST /api/v1/auth/register
         Body: {"username": "user@example.com", "password": "secret"}
 
-    Исключения:
+    Raises:
         HTTPException: Если пользователь с таким email уже существует
     """
     new_user = await user_service.register(user, pwd_manager)

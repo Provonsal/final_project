@@ -28,17 +28,17 @@ async def write_comment(
     """
     Создаёт новый комментарий для задачи.
 
-    Аргументы:
+    Args:
         comment_data (CreateComment): Текст комментария
         comment_dep (CommentDep): Зависимость для работы с комментариями
         task (Task): Задача, к которой относится комментарий
         user (User): Текущий пользователь
         team (Team): Команда, к которой относится задача
 
-    Возвращает:
+    Returns:
         ResponseCommentSchema: Созданный комментарий
 
-    Пример:
+    Example:
         POST /api/v1/teams/tasks/{task_id}/comments
         Body: {"text": "New comment"}
     """
@@ -61,16 +61,16 @@ async def read_comments(
     """
     Получает все комментарии для задачи.
 
-    Аргументы:
+    Args:
         user (User): Текущий пользователь (для проверки прав доступа)
         comment_service (CommentService): Сервис для работы с комментариями
         task (Task): Задача, к которой относятся комментарии
         team (Team): Команда, к которой относится задача
 
-    Возвращает:
+    Returns:
         list[ResponseCommentSchema]: Список комментариев
 
-    Пример:
+    Example:
         GET /api/v1/teams/tasks/{task_id}/comments
     """
     comments = await comment_service.get_comments(task, user, team)
@@ -96,7 +96,7 @@ async def edit_comment(
     """
     Редактирует существующий комментарий.
 
-    Аргументы:
+    Args:
         comment_data (UpdateComment): Новые данные комментария
         user (User): Текущий пользователь (должен быть автором комментария)
         comment_service (CommentService): Сервис для работы с комментариями
@@ -104,10 +104,10 @@ async def edit_comment(
         task (Task): Задача, к которой относится комментарий
         comment (Comment): Редактируемый комментарий
 
-    Возвращает:
+    Returns:
         ResponseCommentSchema: Обновленный комментарий
 
-    Пример:
+    Example:
         PATCH /api/v1/teams/tasks/{task_id}/comments/{comment_id}
         Body: {"text": "Updated comment text"}
     """
@@ -131,17 +131,17 @@ async def delete_comment(
     """
     Удаляет комментарий.
 
-    Аргументы:
+    Args:
         comment_service (CommentService): Сервис для работы с комментариями
         user (User): Текущий пользователь (должен быть автором комментария)
         task (Task): Задача, к которой относится комментарий
         team (Team): Команда, к которой относится задача
         comment (Comment): Удаляемый комментарий
 
-    Возвращает:
+    Returns:
         ResponseOperationSuccess | ResponseOperationFailure: Результат операции
 
-    Пример:
+    Example:
         DELETE /api/v1/teams/tasks/{task_id}/comments/{comment_id}
     """
     result = await comment_service.delete(comment, task, user, team)

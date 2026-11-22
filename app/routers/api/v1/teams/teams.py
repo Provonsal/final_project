@@ -27,15 +27,15 @@ async def create_team(
 
     Только менеджер может создать команду. После создания создает invite-код для приглашения участников.
 
-    Аргументы:
+    Args:
         user (User): Модели менеджер, создающий команду
         team_service_dep (TeamService): Сервис для работы с командами
         data (CreateTeam): Данные для создания команды
 
-    Возвращает:
+    Returns:
         ResponseTeamSchema: Информация о созданной команде
 
-    Пример:
+    Example:
         POST /api/v1/teams/
         Body: {"name": "My Team"}
     """
@@ -58,15 +58,15 @@ async def join(
     """
     Присоединяет пользователя к команде по invite-коду.
 
-    Аргументы:
+    Args:
         invite_code (str): Invite-код для участия в команде
         current_user (User): Текущий авторизованный пользователь
         team_dep (TeamService): Сервис для работы с командами
 
-    Возвращает:
+    Returns:
         ResponseOperationSuccess | ResponseOperationFailure: Результат операции
 
-    Пример:
+    Example:
         POST /api/v1/teams/join
         Body: {"invite_code": "ABC123"}
     """
@@ -87,15 +87,15 @@ async def get_invite_code(
 
     Только менеджер может создавать invite-коды.
 
-    Аргументы:
+    Args:
         team (Team): Команда для создания invite-кода
         user (User): Модели менеджер команды
         team_service_dep (TeamService): Сервис для работы с командами
 
-    Возвращает:
+    Returns:
         ResponseInviteCodeSchema: Invite-код с деталями
 
-    Пример:
+    Example:
         POST /api/v1/teams/code
     """
     invite_code = await team_service_dep.get_invite_code(team, user)
@@ -116,15 +116,15 @@ async def leave(
     """
     Удаляет пользователя из команды.
 
-    Аргументы:
+    Args:
         current_user (User): Текущий пользователь
         team (Team): Команда, из которой выходит пользователь
         team_dep (TeamService): Сервис для работы с командами
 
-    Возвращает:
+    Returns:
         ResponseOperationSuccess | ResponseOperationFailure: Результат операции
 
-    Пример:
+    Example:
         POST /api/v1/teams/{team_id}/leave
     """
     result = await team_dep.leave_team(current_user, team)
@@ -141,14 +141,14 @@ async def read_teams(
     """
     Получает список команд пользователя.
 
-    Аргументы:
+    Args:
         user (User): Текущий пользователь
         team_service_dep (TeamService): Сервис для работы с командами
 
-    Возвращает:
+    Returns:
         list[ResponseTeamSchema]: Список команд пользователя
 
-    Пример:
+    Example:
         GET /api/v1/teams/
     """
     teams = await team_service_dep.get_teams(user)
@@ -170,15 +170,15 @@ async def read_team(
     """
     Получает информацию о команде.
 
-    Аргументы:
+    Args:
         user (User): Текущий пользователь (для проверки прав доступа)
         team_service_dep (TeamService): Сервис для работы с командами
         team (Team): Запрашиваемая команда
 
-    Возвращает:
+    Returns:
         ResponseTeamSchema: Информация о команде
 
-    Пример:
+    Example:
         GET /api/v1/teams/{team_id}
     """
     team = await team_service_dep.get_team(team, user)
@@ -201,16 +201,16 @@ async def update_team(
 
     Только менеджер может обновлять информацию о команде.
 
-    Аргументы:
+    Args:
         user (User): Модели менеджер команды
         team_service_dep (TeamService): Сервис для работы с командами
         team (Team): Обновляемая команда
         data (UpdateTeam): Новые данные команды
 
-    Возвращает:
+    Returns:
         ResponseTeamSchema: Обновленная информация о команде
 
-    Пример:
+    Example:
         PATCH /api/v1/teams/{team_id}
         Body: {"name": "Updated Team Name"}
     """
@@ -233,15 +233,15 @@ async def delete_team(
 
     Только менеджер может удалить свою команду.
 
-    Аргументы:
+    Args:
         user (User): Модели менеджер команды
         team_service_dep (TeamService): Сервис для работы с командами
         team (Team): Удаляемая команда
 
-    Возвращает:
+    Returns:
         ResponseOperationSuccess | ResponseOperationFailure: Результат операции
 
-    Пример:
+    Example:
         DELETE /api/v1/teams/{team_id}
     """
     result = await team_service_dep.delete(team, user)
@@ -260,15 +260,15 @@ async def members(
     """
     Получает список участников команды.
 
-    Аргументы:
+    Args:
         team_service_dep (TeamService): Сервис для работы с командами
         team (Team): Команда
         user (User): Текущий пользователь (для проверки прав доступа)
 
-    Возвращает:
+    Returns:
         list[ResponseUserSchema]: Список участников команды
 
-    Пример:
+    Example:
         GET /api/v1/teams/{team_id}/members
     """
     members_list = await team_service_dep.get_team_users(team, user)

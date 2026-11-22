@@ -24,16 +24,16 @@ async def create_tasks(
 
     Только менеджер может создавать задачи.
 
-    Аргументы:
+    Args:
         task_service_dep (TaskService): Сервис для работы с задачами
         team (Team): Команда, в которой создается задача
         user (User): Модели менеджер, создающий задачу
         data (CreateTask): Данные для создания задачи
 
-    Возвращает:
+    Returns:
         ResponseTaskSchema: Информация о созданной задаче
 
-    Пример:
+    Example:
         POST /api/v1/teams/tasks/
         Body: {"title": "New Task", "description": "Task description", "assignee_id": user_uuid}
     """
@@ -58,15 +58,15 @@ async def read_tasks(
     """
     Получает все задачи команды.
 
-    Аргументы:
+    Args:
         task_service_dep (TaskService): Сервис для работы с задачами
         team (Team): Команда, для которой получаем задачи
         user (User): Текущий пользователь (для проверки прав доступа)
 
-    Возвращает:
+    Returns:
         list[ResponseTaskSchema]: Список задач команды
 
-    Пример:
+    Example:
         GET /api/v1/teams/tasks/
     """
     tasks = await task_service_dep.get_all_tasks(team, user)
@@ -93,16 +93,16 @@ async def read_task(
     """
     Получает информацию о задаче.
 
-    Аргументы:
+    Args:
         team (Team): Команда, к которой относится задача
         user (User): Текущий пользователь (для проверки прав доступа)
         task (Task): Запрашиваемая задача
         task_service_dep (TaskService): Сервис для работы с задачами
 
-    Возвращает:
+    Returns:
         ResponseTaskSchema: Информация о задаче
 
-    Пример:
+    Example:
         GET /api/v1/teams/tasks/{task_id}
     """
     task = await task_service_dep.get_task(task, team, user)
@@ -127,17 +127,17 @@ async def update_tasks(
     """
     Обновляет задачу.
 
-    Аргументы:
+    Args:
         team (Team): Команда, к которой относится задача
         user (User): Модели менеджер, обновляющий задачу
         task (Task): Обновляемая задача
         task_service_dep (TaskService): Сервис для работы с задачами
         data (UpdateTask): Новые данные для задачи
 
-    Возвращает:
+    Returns:
         ResponseTaskSchema: Обновленная информация о задаче
 
-    Пример:
+    Example:
         PATCH /api/v1/teams/tasks/{task_id}
         Body: {"title": "Updated Task", "status": "done"}
     """
@@ -162,16 +162,16 @@ async def delete_tasks(
     """
     Удаляет задачу.
 
-    Аргументы:
+    Args:
         team (Team): Команда, к которой относится задача
         user (User): Модели менеджер, удаляющий задачу
         task (Task): Удаляемая задача
         task_service_dep (TaskService): Сервис для работы с задачами
 
-    Возвращает:
+    Returns:
         ResponseOperationSuccess | ResponseOperationFailure: Результат операции
 
-    Пример:
+    Example:
         DELETE /api/v1/teams/tasks/{task_id}
     """
     result = await task_service_dep.delete_task(task, user, team)

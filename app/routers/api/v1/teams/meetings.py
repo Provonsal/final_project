@@ -31,16 +31,16 @@ async def create_meetings(
 
     Только менеджер может создавать совещания. После создания автоматически создает invite-код.
 
-    Аргументы:
+    Args:
         team (Team): Команда, для которой создается совещание
         user (User): Модели менеджер, создающий совещание
         meeting_service_dep (MeetingService): Сервис для работы с совещаниями
         data (CreateMeeting): Данные для создания совещания
 
-    Возвращает:
+    Returns:
         ResponseMeetingSchema: Информация о созданном совещании
 
-    Пример:
+    Example:
         POST /api/v1/teams/meetings/
         Body: {"title": "Meeting", "starts_at": "2023-01-01T10:00:00", "ends_at": "2023-01-01T11:00:00"}
     """
@@ -65,15 +65,15 @@ async def read_meetings(
     """
     Получает все совещания команды.
 
-    Аргументы:
+    Args:
         team (Team): Команда, для которой получаем совещания
         user (User): Текущий пользователь (для проверки прав доступа)
         meeting_service_dep (MeetingService): Сервис для работы с совещаниями
 
-    Возвращает:
+    Returns:
         list[ResponseMeetingSchema]: Список совещаний команды
 
-    Пример:
+    Example:
         GET /api/v1/teams/meetings/
     """
     meetings = await meeting_service_dep.get_meetings(team, user)
@@ -97,16 +97,16 @@ async def join_meeting(
     """
     Присоединяет пользователя к совещанию по invite-коду.
 
-    Аргументы:
+    Args:
         team (Team): Команда, к которой относится совещание
         user (User): Текущий пользователь
         code (str): Invite-код для участия в совещании
         meeting_service_dep (MeetingService): Сервис для работы с совещаниями
 
-    Возвращает:
+    Returns:
         ResponseOperationSuccess | ResponseOperationFailure: Результат операции
 
-    Пример:
+    Example:
         POST /api/v1/teams/meetings/join
         Body: {"code": "ABC123"}
     """
@@ -126,16 +126,16 @@ async def get_invite_code(
     """
     Получает invite-код для совещания.
 
-    Аргументы:
+    Args:
         team (Team): Команда, к которой относится совещание
         user (User): Текущий пользователь (для проверки прав доступа)
         meeting (Meeting): Запрашиваемое совещание
         meeting_service_dep (MeetingService): Сервис для работы с совещаниями
 
-    Возвращает:
+    Returns:
         ResponseInviteCodeSchema: Invite-код с деталями
 
-    Пример:
+    Example:
         GET /api/v1/teams/meetings/{meeting_id}/invite_code
     """
     code = await meeting_service_dep.get_invite_code(team, meeting, user)
@@ -158,17 +158,17 @@ async def create_invite_code(
     """
     Создает новый invite-код для совещания.
 
-    Аргументы:
+    Args:
         team (Team): Команда, к которой относится совещание
         user (User): Модели менеджер, создающий invite-код
         meeting (Meeting): Совещание для invite-кода
         meeting_service_dep (MeetingService): Сервис для работы с совещаниями
         uses (int | None): Количество использований invite-кода (-1 для неограниченного)
 
-    Возвращает:
+    Returns:
         ResponseInviteCodeSchema: Созданный invite-код
 
-    Пример:
+    Example:
         POST /api/v1/teams/meetings/{meeting_id}/invite_code
     """
     if uses is None:
@@ -192,16 +192,16 @@ async def leave_meeting(
     """
     Удаляет пользователя из совещания.
 
-    Аргументы:
+    Args:
         team (Team): Команда, к которой относится совещание
         user (User): Текущий пользователь
         meeting (Meeting): Совещание
         meeting_service_dep (MeetingService): Сервис для работы с совещаниями
 
-    Возвращает:
+    Returns:
         ResponseOperationSuccess | ResponseOperationFailure: Результат операции
 
-    Пример:
+    Example:
         POST /api/v1/teams/meetings/{meeting_id}/leave
     """
     result = await meeting_service_dep.leave_meeting(team, meeting, user)
@@ -220,16 +220,16 @@ async def read_meeting(
     """
     Получает информацию о совещании.
 
-    Аргументы:
+    Args:
         team (Team): Команда, к которой относится совещание
         user (User): Текущий пользователь (для проверки прав доступа)
         meeting (Meeting): Запрашиваемое совещание
         meeting_service_dep (MeetingService): Сервис для работы с совещаниями
 
-    Возвращает:
+    Returns:
         ResponseMeetingSchema: Информация о совещании
 
-    Пример:
+    Example:
         GET /api/v1/teams/meetings/{meeting_id}
     """
     meeting = await meeting_service_dep.get_meeting(meeting, team, user)
@@ -252,17 +252,17 @@ async def update_meeting(
     """
     Обновляет информацию о совещании.
 
-    Аргументы:
+    Args:
         team (Team): Команда, к которой относится совещание
         user (User): Модели менеджер, обновляющий совещание
         meeting (Meeting): Обновляемое совещание
         meeting_service_dep (MeetingService): Сервис для работы с совещаниями
         data (UpdateMeeting): Новые данные для совещания
 
-    Возвращает:
+    Returns:
         ResponseMeetingSchema: Обновленная информация о совещании
 
-    Пример:
+    Example:
         PATCH /api/v1/teams/meetings/{meeting_id}
         Body: {"title": "Updated Meeting"}
     """
@@ -286,16 +286,16 @@ async def delete_meeting(
     """
     Удаляет совещание.
 
-    Аргументы:
+    Args:
         team (Team): Команда, к которой относится совещание
         user (User): Модели менеджер, удаляющий совещание
         meeting (Meeting): Удаляемое совещание
         meeting_service_dep (MeetingService): Сервис для работы с совещаниями
 
-    Возвращает:
+    Returns:
         ResponseOperationSuccess | ResponseOperationFailure: Результат операции
 
-    Пример:
+    Example:
         DELETE /api/v1/teams/meetings/{meeting_id}
     """
     result = await meeting_service_dep.delete(meeting, team, user)

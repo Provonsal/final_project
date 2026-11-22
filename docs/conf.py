@@ -59,10 +59,6 @@ extensions = [
 napoleon_google_docstring = True
 napoleon_numpy_docstring = False
 napoleon_custom_sections = [
-    ("Аргументы", "params_style"),
-    ("Возвращает", "returns_style"),
-    ("Исключения", "params_style"),
-    ("Требования", "returns_style"),
     ("Поведение", "other"),
     ("Побочные эффекты", "other"),
     ("Замечание", "other"),

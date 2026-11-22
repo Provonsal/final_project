@@ -27,17 +27,17 @@ async def write_evaluation(
 
     Только менеджер может создавать оценки.
 
-    Аргументы:
+    Args:
         evaluation_data (CreateEvaluation): Данные оценки (идентификатор задачи)
         evaluation_service_dep (EvaluationService): Сервис для работы с оценками
         task (Task): Задача, для которой создаётся оценка
         user (User): Модели менеджер, создающий оценку
         team (Team): Команда, к которой относится задача
 
-    Возвращает:
+    Returns:
         ResponseEvaluationSchema: Созданная оценка
 
-    Пример:
+    Example:
         POST /api/v1/teams/tasks/{task_id}/evaluations
         Body: {"task_id": "uuid"}
     """
@@ -60,17 +60,17 @@ async def read_evaluation(
     """
     Получает информацию об оценке задачи.
 
-    Аргументы:
+    Args:
         evaluation_service_dep (EvaluationService): Сервис для работы с оценками
         task (Task): Задача, для которой получаем оценку
         user (User): Текущий пользователь (для проверки прав доступа)
         team (Team): Команда, к которой относится задача
         evaluation (Evaluation): Запрашиваемая оценка
 
-    Возвращает:
+    Returns:
         ResponseEvaluationSchema: Информация об оценке
 
-    Пример:
+    Example:
         GET /api/v1/teams/tasks/{task_id}/evaluations/{evaluation_id}
     """
     evaluation = await evaluation_service_dep.get_evaluation(user, team, task, evaluation)
@@ -95,7 +95,7 @@ async def edit_evaluation(
 
     Только менеджер может редактировать оценки.
 
-    Аргументы:
+    Args:
         evaluation (Evaluation): Редактируемая оценка
         evaluation_data (UpdateEvaluation): Новые данные оценки
         evaluation_service_dep (EvaluationService): Сервис для работы с оценками
@@ -103,10 +103,10 @@ async def edit_evaluation(
         task (Task): Задача, к которой относится оценка
         team (Team): Команда, к которой относится задача
 
-    Возвращает:
+    Returns:
         ResponseEvaluationSchema: Обновлённая оценка
 
-    Пример:
+    Example:
         PATCH /api/v1/teams/tasks/{task_id}/evaluations/{evaluation_id}
         Body: {"rate": 5}
     """
