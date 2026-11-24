@@ -1,5 +1,8 @@
 
 
+from typing import List
+import uuid
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.exc.exceptions import AuthorizationError, BusinessRuleError
@@ -58,6 +61,23 @@ class EvaluationService:
         
         return evaluation
 
+    async def get_evaluations_for_tasks(self, user: User, team: Team, tasks: List[Task]):
+        if user.role not in (RoleEnum.MANAGER, RoleEnum.MEMBER):
+            raise AuthorizationError(message="You are not allowed to do that.")
+        if not await self.team_repo.belongs_to_team(team.id, user.id):
+            raise AuthorizationError(message="You are not allowed to do that.")
+
+        evaluations: dict[uuid.UUID, TaskRate]  = {}
+        
+        for task in tasks:
+            if task.team_id != team.id:
+                raise AuthorizationError(message="You are not allowed to do that.")
+            
+            evaluation = await self.evaluation_repo.get_evaluation_for_task(task.id)
+            
+            evaluations[task.id] = evaluation
+
+        return evaluations
     
     async def create_evaluation(self, data: CreateEvaluation, user: User, team: Team, task: Task):
         """

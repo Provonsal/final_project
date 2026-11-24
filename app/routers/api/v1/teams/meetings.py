@@ -52,7 +52,8 @@ async def create_meetings(
         start_time=new_meeting.starts_at.isoformat(),
         end_time=new_meeting.ends_at.isoformat(),
         team_id=new_meeting.related_team,
-        creator=new_meeting.creator
+        creator=new_meeting.creator,
+        max_members=new_meeting.max_members
     )
 
 
@@ -83,7 +84,8 @@ async def read_meetings(
             start_time=meeting.starts_at.isoformat(),
             end_time=meeting.ends_at.isoformat(),
             team_id=meeting.related_team,
-            creator=meeting.creator
+            creator=meeting.creator,
+            max_members=meeting.max_members
         ) for meeting in meetings
     ]
 
@@ -238,7 +240,8 @@ async def read_meeting(
         start_time=meeting.starts_at.isoformat(),
         end_time=meeting.ends_at.isoformat(),
         team_id=meeting.related_team,
-        creator=meeting.creator
+        creator=meeting.creator,
+        max_members=meeting.max_members
     )
 
 @router.patch("/{meeting_id}")
@@ -272,7 +275,8 @@ async def update_meeting(
         start_time=meeting.starts_at.isoformat(),
         end_time=meeting.ends_at.isoformat(),
         team_id=meeting.related_team,
-        creator=meeting.creator
+        creator=meeting.creator,
+        max_members=meeting.max_members
     )
 
 

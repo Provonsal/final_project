@@ -2,6 +2,8 @@ import uuid
 
 from pydantic import BaseModel, Field
 
+from app.models import RoleEnum
+
 
 class ResponseUserSchema(BaseModel):
     """
@@ -12,6 +14,7 @@ class ResponseUserSchema(BaseModel):
         username: Имя пользователя (обычно email)
         email: Электронная почта пользователя
         active: Статус активности пользователя (True/False)
+        role: Роль пользователя
 
     Example:
         id: "550e8400-e29b-41d4-a716-446655440000"
@@ -23,3 +26,4 @@ class ResponseUserSchema(BaseModel):
     username: str = Field(..., description="Имя пользователя (обычно email)")
     email: str = Field(..., description="Электронная почта пользователя")
     active: bool = Field(..., description="Статус активности пользователя")
+    role: RoleEnum = Field(..., description="Роль пользователя")

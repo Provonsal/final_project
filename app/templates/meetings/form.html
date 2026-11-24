@@ -2,18 +2,34 @@
 {% block title %}{{ "New Meeting" if mode == "create" else "Edit Meeting" }}{% endblock %}
 {% block content %}
 <h1>{{ "New Meeting" if mode == "create" else "Edit Meeting" }}</h1>
-{% if error %}<pre class="error">{{ error }}</pre>{% endif %}
-<form method="post">
-  <label>Starts at (ISO)
-    <input name="starts_at" value="{{ meeting.starts_at }}" placeholder="2026-11-03T13:29:07Z">
-  </label>
-  <label>Ends at (ISO)
-    <input name="ends_at" value="{{ meeting.ends_at }}" placeholder="2026-11-03T16:29:07Z">
-  </label>
-  <label>Max members
-    <input name="max_members" type="number" value="{{ meeting.max_members }}">
-  </label>
-  <button type="submit">Save</button>
-  <a class="btn" href="/views/teams/{{ team_id }}/meetings">Cancel</a>
+
+{% if error %}
+  <div class="error-message">{{ error }}</div>
+{% endif %}
+
+<form method="post" class="styled-form">
+  <div class="form-group">
+    <label for="starts_at">Start Time *</label>
+    <input type="datetime-local" id="starts_at" name="starts_at"
+           value="{{ meeting.starts_at }}" required>
+  </div>
+
+  <div class="form-group">
+    <label for="ends_at">End Time *</label>
+    <input type="datetime-local" id="ends_at" name="ends_at"
+           value="{{ meeting.ends_at }}" required>
+  </div>
+
+  <div class="form-group">
+    <label for="max_members">Max Members</label>
+    <input type="number" id="max_members" name="max_members"
+           value="{{ meeting.max_members | default(5) }}">
+    <small>Leave empty for unlimited</small>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn">Save</button>
+    <a class="btn" href="/views/teams/{{ team_id }}/meetings">Cancel</a>
+  </div>
 </form>
 {% endblock %}

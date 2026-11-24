@@ -49,6 +49,7 @@ async def root(
             start_time=meeting.starts_at.isoformat(),
             end_time=meeting.ends_at.isoformat(),
             team_id=meeting.related_team,
-            creator=meeting.creator
+            creator=meeting.creator,
+            max_members=meeting.max_members
         ) for meeting in meetings
     ]

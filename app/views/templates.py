@@ -24,6 +24,27 @@ def _flashed(ctx) -> list[dict]:
     return [] if req is None else pop_flash(req)
 
 
+@pass_context
+def format_datetime(ctx, dt) -> str:
+    """Format datetime object to readable string"""
+    if dt is None:
+        return "Never"
+    return dt.strftime("%d.%m.%Y %H:%M") if hasattr(dt, "strftime") else str(dt)
+
+
+@pass_context
+def format_date(ctx, dt) -> str:
+    """Format date object to readable string"""
+    if dt is None:
+        return "Never"
+    return dt.strftime("%d.%m.%Y") if hasattr(dt, "strftime") else str(dt)
+
+
+# Register as filters (not globals) to work with pipe syntax
+templates.env.filters["format_datetime"] = format_datetime
+templates.env.filters["format_date"] = format_date
+
+# Register globals
 templates.env.globals["can"] = _can
 templates.env.globals["is_forbidden"] = _is_forbidden
 templates.env.globals["flashed"] = _flashed

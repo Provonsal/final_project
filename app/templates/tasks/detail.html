@@ -1,20 +1,101 @@
 {% extends "base.html" %}
-{% block title %}Task{% endblock %}
+{% block title %}Task: {{ task.title }}{% endblock %}
 {% block content %}
-<h1>Task</h1>
-<p>
-  {% if can('team:' ~ team_id ~ ':task:' ~ task_id ~ ':update') %}
-    <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/edit">Edit</a>
+<h1>Task: {{ task.title }}</h1>
+
+<div class="task-detail">
+  <div class="task-header">
+    <h2>{{ task.title or "Untitled Task" }}</h2>
+    <div class="task-status-badge">
+      {% set status_info = {
+          1: ('To Do', '#64748b'),
+          2: ('In Progress', '#2563eb'),
+          3: ('Done', '#16a34a')
+      } %}
+      {% set status = status_info.get(task.status, ("unknown", '#64748b')) %}
+      <span style="background: {{ status[1] }}20; color: {{ status[1] }}; padding: 0.2rem 0.8rem; border-radius: 999px; font-weight: bold;">{{ status[0] }}</span>
+    </div>
+  </div>
+
+  <div class="task-description">
+    <h3>Description</h3>
+    <p>{{ task.description or "No description provided" }}</p>
+  </div>
+
+  <div class="task-info">
+    <div class="info-card">
+      <span class="label">Status:</span>
+      <p class="info-value">
+        {% set status_info = {
+            1: ('To Do', '#64748b'),
+            2: ('In Progress', '#2563eb'),
+            3: ('Done', '#16a34a')
+        } %}
+        {% set status = status_info.get(task.status, ("unknown", '#64748b')) %}
+        <span style="color: {{ status[1] }}">{{ status[0] }}</span>
+      </p>
+    </div>
+    {% if task.due_date %}
+    <div class="info-card">
+      <span class="label">Due Date:</span>
+      <p class="info-value">{{ task.due_date | format_date }}</p>
+    </div>
+    {% endif %}
+    <div class="info-card">
+      <span class="label">Assigned To:</span>
+      <p>
+        {% if task.assignee_id %}
+          {% if task.assignee_id.name %}
+            <strong>{{ task.assignee_id.name }}</strong>
+          {% elif task.assignee_id.username %}
+            <strong>{{ task.assignee_id.username }}</strong>
+          {% else %}
+            {{ task.assignee_id }}
+          {% endif %}
+        {% else %}
+          <em style="color: #666;">Unassigned</em>
+        {% endif %}
+      </p>
+    </div>
+    {% if task.evaluation %}
+    <div class="info-card">
+      <span class="label">Evaluation:</span>
+      <p class="info-value" style="color: #16a34a;">{{ task.get("evaluation").get("display_text") }}</p>
+    </div>
+    {% else %}
+    <div class="info-card">
+      <span class="label">Evaluation:</span>
+      <p><em style="color: #666;">Not yet evaluated</em></p>
+    </div>
+    {% endif %}
+    {% if task.comments | length > 0 %}
+    <div class="info-card">
+      <span class="label">Comments:</span>
+      <p><a href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/comments">View all comments</a> ({{ task.comments | length }})</p>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if error %}
+    <div class="error-message">{{ error }}</div>
   {% endif %}
-  <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/comments">Comments</a>
-  <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/evaluation">Evaluation</a>
-  <a class="btn" href="/views/teams/{{ team_id }}/tasks">Back to tasks</a>
-  {% if can('team:' ~ team_id ~ ':task:' ~ task_id ~ ':delete') %}
-    <form method="post" action="/views/teams/{{ team_id }}/tasks/{{ task_id }}/delete"
-          style="display:inline" onsubmit="return confirm('Удалить задачу?')">
-      <button class="btn btn-danger" type="submit">Delete</button>
-    </form>
-  {% endif %}
-</p>
-<pre>{{ task | tojson(indent=2) }}</pre>
+
+  <div class="task-actions">
+    <p>
+      {% if can('team:' ~ team_id ~ ':task:' ~ task_id ~ ':update') %}
+        <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/edit">Edit</a>
+      {% endif %}
+      <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/comments">Comments</a>
+      <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/evaluation">Evaluation</a>
+      <a class="btn" href="/views/teams/{{ team_id }}/tasks">Back to tasks</a>
+      {% if can('team:' ~ team_id ~ ':task:' ~ task_id ~ ':delete') %}
+        <form method="post" action="/views/teams/{{ team_id }}/tasks/{{ task_id }}/delete"
+              style="display:inline" onsubmit="return confirm('Удалить задачу?')">
+          <button class="btn btn-danger btn-small" type="submit">Delete</button>
+        </form>
+      {% endif %}
+    </p>
+    <a class="btn" href="/views/teams/{{ team_id }}">Back to team</a>
+  </div>
+</div>
 {% endblock %}

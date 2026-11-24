@@ -277,6 +277,7 @@ async def members(
             id=user.id,
             username=user.name,
             email=user.email,
-            active=user.is_active
+            active=user.is_active,
+            role=user.role
         ) for user in members_list
     ]

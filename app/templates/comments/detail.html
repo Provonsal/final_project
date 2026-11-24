@@ -1,11 +1,48 @@
 {% extends "base.html" %}
-{% block title %}Evaluation{% endblock %}
+{% block title %}Comment: {{ comment.id }}{% endblock %}
 {% block content %}
-<h1>Evaluation</h1>
+<h1>Comment #{{ comment.id }}</h1>
+
+<div class="comment-info">
+  <div class="info-card">
+    <span class="label">Task:</span>
+    <p>
+      <a href="/views/teams/{{ team_id }}/tasks/{{ task_id }}">{{ task.title or "Task #" ~ task_id }}</a>
+    </p>
+  </div>
+  <div class="info-card">
+    <span class="label">Author:</span>
+    <p>
+      {% if comment.author %}
+        {% if comment.author.name %}
+          {{ comment.author.name }}
+        {% elif comment.author.username %}
+          {{ comment.author.username }}
+        {% else %}
+          Unknown
+        {% endif %}
+      {% else %}
+        Unknown
+      {% endif %}
+    </p>
+  </div>
+  <div class="info-card">
+    <span class="label">Created:</span>
+    <p>{{ comment.created_at | format_datetime }}</p>
+  </div>
+</div>
+
+{% if error %}
+  <div class="error-message">{{ error }}</div>
+{% endif %}
+
 <p>
-  <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/evaluation/new">+ New Evaluation</a>
+  {% if can('team:' ~ team_id ~ ':task:' ~ task_id ~ ':comment:' ~ comment.id ~ ':update') %}
+    <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/comments/{{ comment.id }}/edit">Edit</a>
+  {% endif %}
+  <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/comments">Back to comments</a>
   <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}">Back to task</a>
 </p>
-{% if error %}<pre class="error">{{ error }}</pre>{% endif %}
-{% if evaluation %}<pre>{{ evaluation | tojson(indent=2) }}</pre>{% endif %}
+
+<a class="btn" href="/views/teams/{{ team_id }}">Back to team</a>
 {% endblock %}

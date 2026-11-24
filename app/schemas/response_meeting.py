@@ -13,6 +13,7 @@ class ResponseMeetingSchema(BaseModel):
         end_time: Дата и время окончания совещания (ISO format)
         team_id: Уникальный идентификатор команды совещания
         creator: Уникальный идентификатор создателя совещания
+        max_members: Максимальное количество участников собрания
 
     Example:
         id: "550e8400-e29b-41d4-a716-446655440000"
@@ -26,3 +27,4 @@ class ResponseMeetingSchema(BaseModel):
     end_time: str = Field(..., description="Дата и время окончания совещания (ISO format)")
     team_id: uuid.UUID = Field(..., description="Уникальный идентификатор команды совещания")
     creator: uuid.UUID = Field(..., description="Уникальный идентификатор создателя совещания")
+    max_members: int = Field(..., description="Максимальное количество участников собрания")

@@ -1,6 +1,11 @@
 from fastapi import APIRouter
-from app.dependencies import TaskDep, TeamDep, TaskServiceDep, ManagerDep, MemberOrManagerDep
+from typing import Optional, cast
+
+from app.dependencies import EvaluationDep, TaskDep, TeamDep, TaskServiceDep, ManagerDep, MemberOrManagerDep, CommentServiceDep, EvaluationServiceDep, get_evaluation
+from app.models import RateEnum
+from app.models.models import Task
 from app.schemas.create_task import CreateTask
+from app.schemas.response_evaluation import ResponseEvaluationSchema
 from app.schemas.response_success import ResponseOperationFailure, ResponseOperationSuccess
 from app.schemas.response_task import ResponseTaskSchema
 from app.schemas.update_task import UpdateTask
@@ -13,7 +18,7 @@ API роутер для управления задачами.
 """
 
 @router.post("")
-async def create_tasks(
+async def create_task(
     task_service_dep: TaskServiceDep,
     team: TeamDep,
     user: ManagerDep,
@@ -37,7 +42,14 @@ async def create_tasks(
         POST /api/v1/teams/tasks/
         Body: {"title": "New Task", "description": "Task description", "assignee_id": user_uuid}
     """
+    
     task = await task_service_dep.create_task(data, team, user)
+    evaluation_schema = ResponseEvaluationSchema(
+        id=task.rate.id,
+        rate=task.rate.rate,
+        author=task.rate.rater,
+        display_text=task.rate.rate.name
+    )
     return ResponseTaskSchema(
         id=task.id,
         title=task.title,
@@ -45,7 +57,8 @@ async def create_tasks(
         assignee_id=task.assignee,
         due_date=task.due_date.isoformat(),
         status=task.status,
-        team_id=task.team_id
+        team_id=task.team_id,
+        evaluation=evaluation_schema
     )
 
 
@@ -54,6 +67,7 @@ async def read_tasks(
     task_service_dep: TaskServiceDep,
     team: TeamDep,
     user: MemberOrManagerDep,
+    evaluation_service_dep: EvaluationServiceDep
 ):
     """
     Получает все задачи команды.
@@ -69,8 +83,12 @@ async def read_tasks(
     Example:
         GET /api/v1/teams/tasks/
     """
-    tasks = await task_service_dep.get_all_tasks(team, user)
-    return [
+
+    tasks: list[Task] = cast(list, await task_service_dep.get_all_tasks(team, user))
+
+    evaluations = await evaluation_service_dep.get_evaluations_for_tasks(user, team, tasks)
+
+    response = [
         ResponseTaskSchema(
             id=task.id,
             title=task.title,
@@ -78,9 +96,26 @@ async def read_tasks(
             assignee_id=task.assignee,
             due_date=task.due_date.isoformat(),
             status=task.status,
-            team_id=task.team_id
+            team_id=task.team_id,
+            evaluation=None,
+
         ) for task in tasks
     ]
+
+    for response_schema in response:
+        evaluation = evaluations.get(response_schema.id)
+        
+        if evaluation is None: continue
+        
+        evaluation_schema = ResponseEvaluationSchema(
+            id=evaluation.id,
+            rate=evaluation.rate,
+            author=evaluation.rater,
+            display_text=evaluation.rate.name
+        )
+        response_schema.evaluation = evaluation_schema
+
+    return response
 
 
 @router.get("/{task_id}")
@@ -88,7 +123,7 @@ async def read_task(
     team: TeamDep,
     user: MemberOrManagerDep,
     task: TaskDep,
-    task_service_dep: TaskServiceDep,
+    comment_service: CommentServiceDep,
 ):
     """
     Получает информацию о задаче.
@@ -98,14 +133,27 @@ async def read_task(
         user (User): Текущий пользователь (для проверки прав доступа)
         task (Task): Запрашиваемая задача
         task_service_dep (TaskService): Сервис для работы с задачами
+        evaluation_service (EvaluationService): Сервис для работы с оценками
+        comment_service (CommentService): Сервис для работы с комментариями
 
     Returns:
-        ResponseTaskSchema: Информация о задаче
+        ResponseTaskSchema: Информация о задаче с комментариями и оценкой
 
     Example:
         GET /api/v1/teams/tasks/{task_id}
-    """
-    task = await task_service_dep.get_task(task, team, user)
+    """    
+
+    comments = cast(list, await comment_service.get_comments(task, user, team))
+
+    await task.awaitable_attrs.rate
+    
+    evaluation_schema = ResponseEvaluationSchema(
+        id=task.rate.id,
+        rate=task.rate.rate,
+        author=task.rate.rater,
+        display_text=task.rate.rate.name
+    )
+
     return ResponseTaskSchema(
         id=task.id,
         title=task.title,
@@ -113,16 +161,20 @@ async def read_task(
         assignee_id=task.assignee,
         due_date=task.due_date.isoformat(),
         status=task.status,
-        team_id=task.team_id
+        team_id=task.team_id,
+        evaluation=evaluation_schema,
+        comments=comments
     )
 
 @router.patch("/{task_id}")
 async def update_tasks(
+    data: UpdateTask,
     team: TeamDep,
     user: ManagerDep,
     task: TaskDep,
+    evaluation: EvaluationDep,
     task_service_dep: TaskServiceDep,
-    data: UpdateTask
+    comment_service: CommentServiceDep,
 ):
     """
     Обновляет задачу.
@@ -142,6 +194,14 @@ async def update_tasks(
         Body: {"title": "Updated Task", "status": "done"}
     """
     task = await task_service_dep.update_task(data, task, user, team)
+    comments = cast(list, await comment_service.get_comments(task, user, team))
+    
+    evaluation_schema = ResponseEvaluationSchema(
+        id=task.rate.id,
+        rate=task.rate.rate,
+        author=task.rate.rater,
+        display_text=task.rate.rate.name
+    )
     return ResponseTaskSchema(
         id=task.id,
         title=task.title,
@@ -149,7 +209,9 @@ async def update_tasks(
         assignee_id=task.assignee,
         due_date=task.due_date.isoformat(),
         status=task.status,
-        team_id=task.team_id
+        team_id=task.team_id,
+        evaluation=evaluation_schema,
+        comments=comments
     )
 
 @router.delete("/{task_id}")

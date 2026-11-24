@@ -2,15 +2,26 @@
 {% block title %}{{ "New Team" if mode == "create" else "Edit Team" }}{% endblock %}
 {% block content %}
 <h1>{{ "New Team" if mode == "create" else "Edit Team" }}</h1>
-{% if error %}<pre class="error">{{ error }}</pre>{% endif %}
-<form method="post">
-  <label>Name
-    <input name="name" value="{{ team.name }}" {% if mode == "create" %}required{% endif %}>
-  </label>
-  <label>Max per team
-    <input name="max_per_team" type="number" value="{{ team.max_per_team }}">
-  </label>
-  <button type="submit">Save</button>
-  <a class="btn" href="/views/teams/">Cancel</a>
+
+{% if error %}
+  <div class="error-message">{{ error }}</div>
+{% endif %}
+
+<form method="post" class="styled-form">
+  <div class="form-group">
+    <label for="name">Team Name *</label>
+    <input type="text" id="name" name="name" value="{{ team.name }}" required>
+  </div>
+
+  <div class="form-group">
+    <label for="max_per_team">Max Members</label>
+    <input type="number" id="max_per_team" name="max_per_team" value="{{ team.max_per_team | default(5) }}">
+    <small>Leave empty for unlimited</small>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn">Save</button>
+    <a class="btn" href="/views/teams/">Cancel</a>
+  </div>
 </form>
 {% endblock %}

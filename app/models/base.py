@@ -2,9 +2,10 @@ import uuid
 
 from sqlalchemy import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.ext.asyncio import AsyncAttrs
 
 
-class Base(DeclarativeBase):
+class Base(AsyncAttrs, DeclarativeBase):
     """Базовый класс для сущностей с id."""
     pass
 

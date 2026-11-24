@@ -2,22 +2,41 @@
 {% block title %}Meetings{% endblock %}
 {% block content %}
 <h1>Meetings</h1>
-<p>
-  {% if can('team:' ~ team_id ~ ':meeting:create') %}
-    <a class="btn" href="/views/teams/{{ team_id }}/meetings/new">+ New Meeting</a>
-  {% endif %}
-  <a class="btn" href="/views/teams/{{ team_id }}">Back to team</a>
-</p>
-{% if error %}<pre class="error">{{ error }}</pre>{% endif %}
+
+<div class="meetings-info">
+  <div class="info-card">
+    <span class="label">Team:</span>
+    <p>
+      <a href="/views/teams/{{ team_id }}">{{ team.name or "Team #" ~ team_id }}</a>
+    </p>
+  </div>
+  <div class="info-card">
+    <span class="label">Total Meetings:</span>
+    <p class="info-value">{{ meetings | length }}</p>
+  </div>
+</div>
+
+{% if error %}
+  <div class="error-message">{{ error }}</div>
+{% endif %}
+
 <table>
-  <thead><tr><th>ID</th><th>Starts</th><th>Ends</th><th>Max</th><th></th></tr></thead>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Start Time</th>
+      <th>End Time</th>
+      <th>Max Members</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
   <tbody>
   {% for m in meetings %}
     <tr>
       <td><code>{{ m.id }}</code></td>
-      <td>{{ m.starts_at }}</td>
-      <td>{{ m.ends_at }}</td>
-      <td>{{ m.max_members }}</td>
+      <td>{{ m.start_time | format_datetime }}</td>
+      <td>{{ m.end_time | format_datetime }}</td>
+      <td>{{ m.max_members or "Unlimited" }}</td>
       <td>
         <a class="btn" href="/views/teams/{{ team_id }}/meetings/{{ m.id }}">Open</a>
         {% if can('team:' ~ team_id ~ ':meeting:' ~ m.id ~ ':update') %}
@@ -26,14 +45,23 @@
         {% if can('team:' ~ team_id ~ ':meeting:' ~ m.id ~ ':delete') %}
           <form method="post" action="/views/teams/{{ team_id }}/meetings/{{ m.id }}/delete"
                 style="display:inline" onsubmit="return confirm('Удалить встречу?')">
-            <button class="btn btn-danger" type="submit">Delete</button>
+            <button class="btn btn-danger btn-small" type="submit">Delete</button>
           </form>
         {% endif %}
       </td>
     </tr>
   {% else %}
-    <tr><td colspan="5">Пусто.</td></tr>
+    <tr>
+      <td colspan="5" style="text-align: center; color: #666;">No meetings yet</td>
+    </tr>
   {% endfor %}
   </tbody>
 </table>
+
+<p>
+  {% if can('team:' ~ team_id ~ ':meeting:create') %}
+    <a class="btn" href="/views/teams/{{ team_id }}/meetings/new">+ New Meeting</a>
+  {% endif %}
+  <a class="btn" href="/views/teams/{{ team_id }}">Back to team</a>
+</p>
 {% endblock %}

@@ -45,7 +45,8 @@ async def write_evaluation(
     return ResponseEvaluationSchema(
         id=evaluation.id,
         rate=evaluation.rate,
-        author=evaluation.rater
+        author=evaluation.rater,
+        display_text=evaluation.rate.name
     )
 
 
@@ -77,7 +78,8 @@ async def read_evaluation(
     return ResponseEvaluationSchema(
         id=evaluation.id,
         rate=evaluation.rate,
-        author=evaluation.rater
+        author=evaluation.rater,
+        display_text=evaluation.rate.name
     )
 
 
@@ -114,5 +116,6 @@ async def edit_evaluation(
     return ResponseEvaluationSchema(
         id=evaluation.id,
         rate=evaluation.rate,
-        author=evaluation.rater
+        author=evaluation.rater,
+        display_text=evaluation.rate.name
     )

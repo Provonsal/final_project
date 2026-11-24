@@ -1,8 +1,73 @@
 {% extends "base.html" %}
-{% block title %}Members{% endblock %}
+{% block title %}Team Members{% endblock %}
 {% block content %}
-<h1>Members</h1>
-<p><a class="btn" href="/views/teams/{{ team_id }}">Back to team</a></p>
-{% if error %}<pre class="error">{{ error }}</pre>{% endif %}
-<pre>{{ members | tojson(indent=2) }}</pre>
+<h1>Team Members</h1>
+
+<div class="team-info">
+  <div class="info-card">
+    <span class="label">Team:</span>
+    <p>{{ team.name }}</p>
+  </div>
+  <div class="info-card">
+    <span class="label">Total Members:</span>
+    <p class="info-value">{{ members | length }}</p>
+  </div>
+</div>
+
+{% if error %}
+  <div class="error-message">{{ error }}</div>
+{% endif %}
+
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Role</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for member in members %}
+    <tr>
+      <td><code>{{ member.user_id or member.id }}</code></td>
+      <td>
+        {% if member.name %}
+          {{ member.name }}
+        {% elif member.username %}
+          {{ member.username }}
+        {% else %}
+          Unknown
+        {% endif %}
+      </td>
+      <td>
+        <span class="role-pill">{{ member.role }}</span>
+      </td>
+      <td>
+        {% if can('team:' ~ team_id ~ ':update') %}
+          {% if member.role != 'admin' %}
+            <a class="btn btn-small" href="/views/teams/{{ team_id }}/members/{{ member.user_id }}/edit">Edit</a>
+          {% endif %}
+        {% endif %}
+        {% if can('team:' ~ team_id ~ ':delete') and member.role != 'owner' %}
+          <form method="post" action="/views/teams/{{ team_id }}/members/{{ member.user_id }}/delete"
+                style="display:inline"
+                onsubmit="return confirm('Remove member from team?')">
+            <button class="btn btn-danger btn-small" type="submit">Remove</button>
+          </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+    {% if members | length == 0 %}
+    <tr>
+      <td colspan="5" style="text-align: center; color: #666;">No members yet</td>
+    </tr>
+    {% endif %}
+  </tbody>
+</table>
+
+<p>
+  <a class="btn" href="/views/teams/{{ team_id }}">Back to team</a>
+</p>
 {% endblock %}

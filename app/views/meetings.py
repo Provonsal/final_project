@@ -21,10 +21,16 @@ def _meeting_defaults(data: dict | None = None) -> dict:
 async def list_meetings(request: Request, team_id: str):
     if (redir := redirect_if_anonymous(request)):
         return redir
+
+    # Получаем информацию о команде
+    team_r = await api_call(request, "GET", f"/api/v1/teams/{team_id}")
+
+    # Получаем встречи команды
     r = await api_call(request, "GET", f"/api/v1/teams/{team_id}/meetings")
     return templates.TemplateResponse(
         request, "meetings/list.html",
         {"team_id": team_id,
+         "team": team_r.json() if ok(team_r) else None,
          "meetings": r.json() if ok(r) else [],
          "error": None if ok(r) else r.text},
     )
