@@ -9,6 +9,7 @@ Subpackages
 
    app.database
    app.models
+   app.routers
    app.schemas
    app.services
    app.views
