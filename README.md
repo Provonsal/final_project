@@ -132,16 +132,29 @@
 
 **2. Подготовьте переменные окружения:**
 
+В папке где скачан `docker-compose.yml` и `.env.example`:
+
 ```bash
 cp .env.example .env
 ```
 
 Откройте .env и заполните значения:
 ```dotenv
-POSTGRES_USER=app_user
-POSTGRES_PASSWORD=change-me
-POSTGRES_DB=app_db
-SECRET_KEY=change-me-too
+POSTGRES_USER="your_username"
+POSTGRES_PASSWORD="your_password"
+POSTGRES_DB="your_database_name"
+DATABASE_URL="postgresql+asyncpg://your_username:your_password@localhost:5432/your_database_name"
+SECRET_KEY="your-secret-key-change-in-production"
+VIEWS_SECRET="dev-secret-change-me"
+TEST_DB_URL="postgresql+asyncpg://your_username:your_password@localhost:5432/your_database_name"
+API_BASE_URL="http://localhost:8000"
+ACCESS_TOKEN_EXPIRE_MINUTES=15
+REFRESH_TOKEN_EXPIRE_DAYS=7
+TOKEN_ALGORITHM="HS256"
+ALGORITHM="sha256"  
+SALT_SIZE=16        
+HASH_SIZE=32        
+ITERATIONS=600000  
 ```
 
 **3. Запустите стек:**
@@ -222,20 +235,6 @@ final_project/
 
 👉 https://provonsal.github.io/final_project/
 
-Локальная сборка:
-
-```bash
-pip install sphinx sphinx-autodoc-typehints furo
-sphinx-build -W docs docs/_build/html
-```
-
-Или живой просмотр во время работы:
-
-```bash
-sphinx-autobuild docs docs/_build/html
-# откройте http://127.0.0.1:8000
-```
-
 ## 📦 Релизы и публикация образов
 
 Каждый релиз автоматически собирается GitHub Actions при пуше тега вида v*
@@ -244,32 +243,6 @@ sphinx-autobuild docs docs/_build/html
 ```bash
 docker pull ghcr.io/provonsal/final_project:latest
 ```
-
-Актуальная версия и файлы для развёртывания — на странице
-последнего релиза.
-
-Запуск нового релиза:
-
-```bash
-git tag -a v1.0.0 -m "Release v1.0.0"
-git push origin v1.0.0
-```
-
-Workflow соберёт образ, запушит его в GHCR и создаст GitHub Release с
-прикреплёнными docker-compose.yml и .env.example.
-
-## 🤝 Вклад в проект
-Публичный репозиторий принимает изменения только через Pull Request:
-
-1. Сделайте форк репозитория.
-
-2. Создайте ветку feature/your-feature.
-
-3. Закоммитьте изменения.
-
-4. Откройте Pull Request в main.
-
-Прямые пуши в main заблокированы, обязательный ревью от владельца кода.
 
 ## 📄 Лицензия
 
