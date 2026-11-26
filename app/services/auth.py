@@ -78,99 +78,92 @@ class AuthService:
             raise WrongInputError(message="Неверный email или пароль")
 
     async def refresh(self, refresh_data: RefreshTokenSchema, tkn_manager: TKNManager):
+        payload = tkn_manager.decode_token(refresh_data.refresh_token)
+        
+        # Проверяем, что это refresh токен
+        if payload.get("type") != "refresh":
+            raise WrongInputError(
+                message="Invalid token type"
+            )
+        
+        user_id = payload.get("sub")
+
+        if user_id is None:
+            raise WrongInputError(
+                message="Invalid token"
+            )
+        
         try:
-            payload = tkn_manager.decode_token(refresh_data.refresh_token)
-            
-            # Проверяем, что это refresh токен
-            if payload.get("type") != "refresh":
-                raise WrongInputError(
-                    message="Invalid token type"
-                )
-            
-            user_id = payload.get("sub")
+            user = await self.user_repo.get_by_id(user_id)
+        except:
+            raise WrongInputError(
+                message="User not found"
+            )
 
-            if user_id is None:
-                raise WrongInputError(
-                    message="Invalid token"
-                )
-            
-            try:
-                user = await self.user_repo.get_by_id(user_id)
-            except:
-                raise WrongInputError(
-                    message="User not found"
-                )
+        if not user.is_active:
+            raise WrongInputError(
+                message="User is not active"
+            )
+        
+        expire_time = payload.get("exp")
 
-            if not user.is_active:
-                raise WrongInputError(
-                    message="User is not active"
-                )
-            
-            expire_time = payload.get("exp")
-
-            if expire_time is not None:
-                if datetime.datetime.fromtimestamp(expire_time, datetime.UTC) < datetime.datetime.now(datetime.UTC):
-                    raise AuthorizationError(
-                        message="Token expired. Log in again please"
-                    )
-            else:
-                raise WrongInputError(
-                    message="Invalid token"
-                )
-
-            try:
-                
-                ref_db_token = await self.refresh_repo.get_by_hash(tkn_manager.hash_token(refresh_data.refresh_token))
-
-            except:
-                raise WrongInputError(
-                    message="Invalid refresh token"
-                )
-
-            if ref_db_token.revoked:
-                
-                await self.refresh_repo.update_revoke_all_family(ref_db_token.family_id)
-
+        if expire_time is not None:
+            if datetime.datetime.fromtimestamp(expire_time, datetime.UTC) < datetime.datetime.now(datetime.UTC):
                 raise AuthorizationError(
-                    message="Revoked token. Log in again please."
+                    message="Token expired. Log in again please"
                 )
-
-            role = user.role
-
-            access_token = tkn_manager.create_access_token(data={"sub": str(user.id), "role" : role.name})
-            refresh_token = tkn_manager.create_refresh_token(data={"sub": str(user.id), "tid": str(uuid4())})
-
-            decoded_refresh_token = tkn_manager.decode_token(refresh_token)
-
-            ref_db_token.revoked = True
-
-            changes_schema = UpdateRefreshToken(
-                revoked=True
+        else:
+            raise WrongInputError(
+                message="Invalid token"
             )
 
-            changes = changes_schema.model_dump(exclude_unset=True)
-
-            await self.refresh_repo.update(ref_db_token.id, changes)
-
-            new_refresh_token_db = RefreshToken(
-                id = decoded_refresh_token.get("tid"),
-                user_id = user_id,
-                created_at = datetime.datetime.now(datetime.UTC),
-                expire_date = decoded_refresh_token.get("exp"),
-                revoked=False,
-                token_hash = tkn_manager.hash_token(refresh_token),
-                family_id = ref_db_token.family_id
-            )
-
-            await self.refresh_repo.create(new_refresh_token_db)
-
-            return ResponseToken(
-                access_token=access_token,
-                refresh_token=refresh_token
-            )
+        try:
             
+            ref_db_token = await self.refresh_repo.get_by_hash(tkn_manager.hash_token(refresh_data.refresh_token))
 
-        except Exception:
+        except:
             raise WrongInputError(
                 message="Invalid refresh token"
             )
+
+        if ref_db_token.revoked:
+            
+            await self.refresh_repo.update_revoke_all_family(ref_db_token.family_id)
+
+            raise AuthorizationError(
+                message="Revoked token. Log in again please."
+            )
+
+        role = user.role
+
+        access_token = tkn_manager.create_access_token(data={"sub": str(user.id), "role" : role.name})
+        refresh_token = tkn_manager.create_refresh_token(data={"sub": str(user.id), "tid": str(uuid4())})
+
+        decoded_refresh_token = tkn_manager.decode_token(refresh_token)
+
+        changes_schema = UpdateRefreshToken(
+            revoked=True
+        )
+
+        changes = changes_schema.model_dump(exclude_unset=True)
+
+        await self.refresh_repo.update(ref_db_token.id, changes)
+
+        new_refresh_token_db = RefreshToken(
+            id = decoded_refresh_token.get("tid"),
+            user_id = user_id,
+            created_at = datetime.datetime.now(datetime.UTC),
+            expire_date = decoded_refresh_token.get("exp"),
+            revoked=False,
+            token_hash = tkn_manager.hash_token(refresh_token),
+            family_id = ref_db_token.family_id
+        )
+
+        await self.refresh_repo.create(new_refresh_token_db)
+        await self.session.commit()
+
+        return ResponseToken(
+            access_token=access_token,
+            refresh_token=refresh_token
+        )
+            

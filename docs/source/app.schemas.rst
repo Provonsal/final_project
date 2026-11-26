@@ -18,6 +18,7 @@ Submodules
    app.schemas.response_evaluation
    app.schemas.response_invite_code
    app.schemas.response_meeting
+   app.schemas.response_meeting_invite_code
    app.schemas.response_register_user
    app.schemas.response_success
    app.schemas.response_task

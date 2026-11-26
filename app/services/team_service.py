@@ -105,6 +105,9 @@ class TeamService:
         if not await self.team_repo.belongs_to_team(team.id, user.id):
             raise AuthorizationError(message="You are not allowed to do that.")
 
+        if user.role != RoleEnum.MANAGER:
+            raise AuthorizationError(message="Only manager can edit Team")
+
         if not changes:
             return await self.team_repo.get_by_id(team.id)  # нечего менять
 

@@ -5,7 +5,7 @@ import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.exc.exceptions import AuthorizationError, BusinessRuleError
+from app.exc.exceptions import AuthorizationError, BusinessRuleError, WrongInputError
 from app.models import RoleEnum
 from app.models.models import Task, TaskRate, Team, User
 from app.repositories.evaluation import EvaluationRepo
@@ -55,9 +55,9 @@ class EvaluationService:
         if not await self.team_repo.belongs_to_team(team.id, user.id):
             raise AuthorizationError(message="You are not allowed to do that.")
         if task.team_id != team.id:
-            raise AuthorizationError(message="You are not allowed to do that.")
+            raise WrongInputError(message="You are not allowed to do that.")
         if evaluation.task_id != task.id:
-            raise AuthorizationError(message="You are not allowed to do that.")
+            raise WrongInputError(message="You are not allowed to do that.")
         
         return evaluation
 
@@ -73,9 +73,12 @@ class EvaluationService:
             if task.team_id != team.id:
                 raise AuthorizationError(message="You are not allowed to do that.")
             
-            evaluation = await self.evaluation_repo.get_evaluation_for_task(task.id)
-            
-            evaluations[task.id] = evaluation
+            try:
+                evaluation = await self.evaluation_repo.get_evaluation_for_task(task.id)
+                evaluations[task.id] = evaluation
+            except NoResultFound:
+                # У задачи нет оценки — просто пропускаем, роут сам поставит None
+                pass
 
         return evaluations
     
@@ -111,6 +114,7 @@ class EvaluationService:
             raise AuthorizationError(message="You are not allowed to do that.")
         if task.team_id != team.id:
             raise AuthorizationError(message="You are not allowed to do that.")
+        
         try:
             existing_rating = await self.evaluation_repo.get_evaluation_for_task(task.id)
             if existing_rating:

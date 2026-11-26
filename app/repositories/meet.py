@@ -38,11 +38,11 @@ class MeetingRepo(BaseRepo[Meeting]):
             await self.session.scalars(
                 select(self.model)
                 .where(
+                    self.model.related_team == team_id
+                ).where(
                     self.model.members.any(
                         MeetingUser.user_id == user_id
                     )
-                ).where(
-                    self.model.related_team == team_id
                 )
             )
         ).all()
