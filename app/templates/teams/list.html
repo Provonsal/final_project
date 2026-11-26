@@ -23,7 +23,7 @@
     <tr>
       <td><code>{{ t.id }}</code></td>
       <td>{{ t.name }}</td>
-      <td>{{ t.max_per_team }}</td>
+      <td>{{ t.max_members }}</td>
       <td>
         <a class="btn" href="/views/teams/{{ t.id }}">Open</a>
         {% if can('team:' ~ t.id ~ ':update') %}

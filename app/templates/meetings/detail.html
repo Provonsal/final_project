@@ -1,18 +1,89 @@
 {% extends "base.html" %}
-{% block title %}Meeting{% endblock %}
+{% block title %}Meeting: {{ meeting.title }}{% endblock %}
 {% block content %}
-<h1>Meeting</h1>
-<p>
-  {% if can('team:' ~ team_id ~ ':meeting:' ~ meeting_id ~ ':update') %}
-    <a class="btn" href="/views/teams/{{ team_id }}/meetings/{{ meeting_id }}/edit">Edit</a>
+<h1>Meeting: {{ meeting.title or "Untitled Meeting" }}</h1>
+
+<div class="meeting-detail">
+  <div class="meeting-header">
+    <h2>{{ meeting.title or "Untitled Meeting" }}</h2>
+    <div class="meeting-type-badge">
+      {% set type_info = {
+          'regular': ('Regular', '#64748b'),
+          'standup': ('Standup', '#2563eb'),
+          'brainstorm': ('Brainstorm', '#a855f7')
+      } %}
+      {% set type = type_info.get(meeting.type, (meeting.type or 'Regular', '#64748b')) %}
+      <span style="background: {{ type[1] }}20; color: {{ type[1] }}; padding: 0.2rem 0.8rem; border-radius: 999px; font-weight: bold;">{{ type[0] }}</span>
+    </div>
+  </div>
+
+  <div class="meeting-description">
+    <h3>Description</h3>
+    <p>{{ meeting.description or "No description provided" }}</p>
+  </div>
+
+  <div class="meeting-info">
+    <div class="info-card">
+      <span class="label">Location:</span>
+      <p>
+        {% if meeting.location %}
+          <strong>{{ meeting.location }}</strong>
+        {% else %}
+          <em style="color: #666;">Online / To be announced</em>
+        {% endif %}
+      </p>
+    </div>
+    <div class="info-card">
+      <span class="label">Start Time:</span>
+      <p class="info-value">{{ meeting.start_time | format_datetime }}</p>
+    </div>
+    <div class="info-card">
+      <span class="label">End Time:</span>
+      <p class="info-value">{{ meeting.end_time | format_datetime }}</p>
+    </div>
+    <div class="info-card">
+      <span class="label">Type:</span>
+      <p class="info-value">
+        {% set type_info = {
+            'regular': ('Regular', '#64748b'),
+            'standup': ('Standup', '#2563eb'),
+            'brainstorm': ('Brainstorm', '#a855f7')
+        } %}
+        {% set type = type_info.get(meeting.type, (meeting.type or 'Regular', '#64748b')) %}
+        <span style="color: {{ type[1] }}">{{ type[0] }}</span>
+      </p>
+    </div>
+    <div class="info-card">
+      <span class="label">Created By:</span>
+      <p>
+        {% if meeting.creator %}
+          <strong>{{ meeting.creator }}</strong>
+          
+        {% else %}
+          Unknown
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  {% if error %}
+    <div class="error-message">{{ error }}</div>
   {% endif %}
-  <a class="btn" href="/views/teams/{{ team_id }}/meetings">Back to meetings</a>
-  {% if can('team:' ~ team_id ~ ':meeting:' ~ meeting_id ~ ':delete') %}
-    <form method="post" action="/views/teams/{{ team_id }}/meetings/{{ meeting_id }}/delete"
-          style="display:inline" onsubmit="return confirm('Удалить встречу?')">
-      <button class="btn btn-danger" type="submit">Delete</button>
-    </form>
-  {% endif %}
-</p>
-<pre>{{ meeting | tojson(indent=2) }}</pre>
+
+  <div class="meeting-actions">
+    <p>
+      {% if can('team:' ~ team_id ~ ':meeting:' ~ meeting_id ~ ':update') %}
+        <a class="btn" href="/views/teams/{{ team_id }}/meetings/{{ meeting_id }}/edit">Edit</a>
+      {% endif %}
+      <a class="btn" href="/views/teams/{{ team_id }}/meetings">Back to meetings</a>
+      {% if can('team:' ~ team_id ~ ':meeting:' ~ meeting_id ~ ':delete') %}
+        <form method="post" action="/views/teams/{{ team_id }}/meetings/{{ meeting_id }}/delete"
+              style="display:inline" onsubmit="return confirm('Удалить встречу?')">
+          <button class="btn btn-danger btn-small" type="submit">Delete</button>
+        </form>
+      {% endif %}
+    </p>
+    <a class="btn" href="/views/teams/{{ team_id }}">Back to team</a>
+  </div>
+</div>
 {% endblock %}

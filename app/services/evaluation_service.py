@@ -1,22 +1,17 @@
 
-from functools import wraps
-from inspect import signature
+
+from typing import List
 import uuid
 
-from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.exc.exceptions import AuthorizationError, BusinessRuleError, NotFoundError
-from app.models import RoleEnum, TaskStatusEnum
-from app.models.models import Comment, Task, TaskRate, Team, User
-from app.repositories.commentary import CommentRepo
+from app.exc.exceptions import AuthorizationError, BusinessRuleError
+from app.models import RoleEnum
+from app.models.models import Task, TaskRate, Team, User
 from app.repositories.evaluation import EvaluationRepo
 from app.repositories.team import TeamRepo
-from app.schemas.create_comment import CommentCreate
-from app.schemas.create_evaluation import EvaluationCreate
-from app.schemas.success import OperationSuccess
-from app.schemas.update_comment import CommentUpdate
-from app.schemas.update_evaluation import EvaluationUpdate
+from app.schemas.create_evaluation import CreateEvaluation
+from app.schemas.update_evaluation import UpdateEvaluation
 from sqlalchemy.exc import NoResultFound
 
 class EvaluationService:
@@ -31,16 +26,16 @@ class EvaluationService:
         """
         Возвращает оценку после проверки базового доступа.
 
-        Аргументы:
+        Args:
             user: Пользователь, выполняющий запрос.
             team: Команда, в контексте которой запрашивается оценка.
             task: Задача, к которой относится оценка.
             evaluation: Оценка, которую нужно вернуть.
 
-        Возвращает:
+        Returns:
             TaskRate: Переданная оценка без изменений.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если пользователь не MANAGER/MEMBER, не состоит
                 в команде или задача не принадлежит команде (см. _ensure_access).
 
@@ -66,21 +61,38 @@ class EvaluationService:
         
         return evaluation
 
+    async def get_evaluations_for_tasks(self, user: User, team: Team, tasks: List[Task]):
+        if user.role not in (RoleEnum.MANAGER, RoleEnum.MEMBER):
+            raise AuthorizationError(message="You are not allowed to do that.")
+        if not await self.team_repo.belongs_to_team(team.id, user.id):
+            raise AuthorizationError(message="You are not allowed to do that.")
+
+        evaluations: dict[uuid.UUID, TaskRate]  = {}
+        
+        for task in tasks:
+            if task.team_id != team.id:
+                raise AuthorizationError(message="You are not allowed to do that.")
+            
+            evaluation = await self.evaluation_repo.get_evaluation_for_task(task.id)
+            
+            evaluations[task.id] = evaluation
+
+        return evaluations
     
-    async def create_evaluation(self, data: EvaluationCreate, user: User, team: Team, task: Task):
+    async def create_evaluation(self, data: CreateEvaluation, user: User, team: Team, task: Task):
         """
         Создает оценку задачи от имени указанного пользователя.
 
-        Аргументы:
+        Args:
             data: Данные для создания оценки.
             user: Пользователь, выполняющий создание.
             team: Команда, в контексте которой создается оценка.
             task: Задача, к которой относится оценка.
 
-        Возвращает:
+        Returns:
             TaskRate: Созданная оценка.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если пользователь не MANAGER/MEMBER, не состоит
                 в команде или задача не принадлежит команде (см. _ensure_access).
 
@@ -112,22 +124,22 @@ class EvaluationService:
         return new_evaluation
 
     
-    async def update(self, data: EvaluationUpdate, user: User, team: Team, task: Task, evaluation: TaskRate):
+    async def update(self, data: UpdateEvaluation, user: User, team: Team, task: Task, evaluation: TaskRate):
         """
         Частично обновляет оценку.
 
-        Аргументы:
+        Args:
             data: Данные для частичного обновления оценки.
             user: Пользователь, выполняющий обновление.
             team: Команда, в контексте которой обновляется оценка.
             task: Задача, к которой относится оценка.
             evaluation: Оценка, которую нужно обновить.
 
-        Возвращает:
+        Returns:
             TaskRate: Обновленная оценка. Если изменений нет, возвращает
                 переданную evaluation без обращения к репозиторию.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если пользователь не MANAGER/MEMBER, не состоит
                 в команде или задача не принадлежит команде (см. _ensure_access).
 
@@ -163,16 +175,16 @@ class EvaluationService:
         """
         Удаляет оценку.
 
-        Аргументы:
+        Args:
             user: Пользователь, выполняющий удаление.
             team: Команда, в контексте которой удаляется оценка.
             task: Задача, к которой относится оценка.
             evaluation: Оценка, которую нужно удалить.
 
-        Возвращает:
+        Returns:
             OperationSuccess: Результат успешной операции.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если пользователь не MANAGER/MEMBER, не состоит
                 в команде или задача не принадлежит команде (см. _ensure_access).
 
@@ -196,4 +208,4 @@ class EvaluationService:
         
         await self.evaluation_repo.delete(evaluation)
         await self.session.commit()
-        return OperationSuccess()
+        return True

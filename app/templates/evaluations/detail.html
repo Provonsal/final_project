@@ -2,12 +2,41 @@
 {% block title %}Evaluation{% endblock %}
 {% block content %}
 <h1>Evaluation</h1>
-<p>
-  {% if can('team:' ~ team_id ~ ':task:' ~ task_id ~ ':evaluation:create') %}
-    <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/evaluation/new">+ New Evaluation</a>
+
+<div class="evaluation-detail">
+  {% if evaluation %}
+    <div class="evaluation-info">
+      <div class="info-card">
+        <span class="label">Rating:</span>
+        <p class="info-value">
+          <span style="color: #000000; font-size: 2rem; font-weight: bold;">
+            {{ evaluation.display_text }}
+          </span>
+        </p>
+      </div>
+    </div>
+  {% else %}
+    <div class="no-evaluation">
+      <p>Task has not been evaluated yet.</p>
+      <p>
+        {% if can('team:' ~ team_id ~ ':task:' ~ task_id ~ ':evaluation:create') %}
+          <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/evaluation/new">+ Add Evaluation</a>
+        {% endif %}
+      </p>
+    </div>
   {% endif %}
-  <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}">Back to task</a>
-</p>
-{% if error %}<pre class="error">{{ error }}</pre>{% endif %}
-{% if evaluation %}<pre>{{ evaluation | tojson(indent=2) }}</pre>{% endif %}
+
+  <div class="evaluation-actions">
+    <p>
+      {% if can('team:' ~ team_id ~ ':task:' ~ task_id ~ ':evaluation:create') %}
+        <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/evaluation/{{ evaluation.id }}/edit">Evaluate</a>
+      {% endif %}
+      <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}">Back to task</a>
+    </p>
+  </div>
+</div>
+
+{% if error %}
+  <div class="error-message">{{ error }}</div>
+{% endif %}
 {% endblock %}

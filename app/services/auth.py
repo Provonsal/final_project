@@ -1,22 +1,9 @@
 import datetime
-from typing import Annotated
 from uuid import uuid4
 
-from fastapi import Depends, HTTPException, Response
 from fastapi.security import OAuth2PasswordRequestForm
 
-# from v2.repos.online_workers import OnlineWorkersRepo
-# from v2.schemas.alive import Alive
-# from v2.schemas.token import Token
-# from v2.enums.role_enum import RoleEnum
-# from v2.enums.subcription_enum import SubscriptionEnum
-# from v2.models import OnlineWorkers, RefreshToken, User
-# from v2.repos.refresh_token import RefreshTokenRepo
-# from v2.repos.role import RoleRepo
-# from v2.repos.subscription import SubcriptionRepo
-# from v2.repos.user import UserRepo
-# from v2.schemas.user_register import UserRegister
-# from v2.schemas.refresh_token import RefreshToken as RefreshTokenSchema
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import NoResultFound
 
@@ -26,13 +13,11 @@ from app.models.models import RefreshToken
 from app.repositories.refresh_token import RefreshTokenRepo
 from app.repositories.user import UserRepo
 from app.schemas.refresh_token import RefreshTokenSchema
-from app.schemas.task_update import TaskUpdate
-from app.schemas.token import Token
-from app.schemas.update_refresh_token import RefreshTokenUpdate
+from app.schemas.response_token import ResponseToken
+from app.schemas.update_refresh_token import UpdateRefreshToken
 from utils.password_manager import PWDManager
 from utils.token_manager import TKNManager
 
-# from v2.schemas.user_response import UserResponse
 
 
 class AuthService:
@@ -85,7 +70,7 @@ class AuthService:
                 await self.user_repo.change_role(user.id, RoleEnum.AUTH)
             await self.session.commit()
 
-            return Token(
+            return ResponseToken(
                 access_token=access_token,
                 refresh_token=refresh_token
             )
@@ -134,7 +119,8 @@ class AuthService:
                 )
 
             try:
-                ref_db_token = await self.refresh_repo.get_by_hash(refresh_data.refresh_token)
+                
+                ref_db_token = await self.refresh_repo.get_by_hash(tkn_manager.hash_token(refresh_data.refresh_token))
 
             except:
                 raise WrongInputError(
@@ -158,7 +144,7 @@ class AuthService:
 
             ref_db_token.revoked = True
 
-            changes_schema = RefreshTokenUpdate(
+            changes_schema = UpdateRefreshToken(
                 revoked=True
             )
 
@@ -178,7 +164,7 @@ class AuthService:
 
             await self.refresh_repo.create(new_refresh_token_db)
 
-            return Token(
+            return ResponseToken(
                 access_token=access_token,
                 refresh_token=refresh_token
             )

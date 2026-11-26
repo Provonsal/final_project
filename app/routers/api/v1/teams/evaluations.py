@@ -1,23 +1,54 @@
 from fastapi import APIRouter
 
-from app.dependencies import CurrentUserDep, EvaluationDep, EvaluationServiceDep, ManagerDep, MemberOrManagerDep, TaskDep, TeamDep
-from app.schemas.create_evaluation import EvaluationCreate
-from app.schemas.update_evaluation import EvaluationUpdate
+from app.dependencies import EvaluationDep, EvaluationServiceDep, ManagerDep, MemberOrManagerDep, TaskDep, TeamDep
+from app.schemas.create_evaluation import CreateEvaluation
+from app.schemas.response_evaluation import ResponseEvaluationSchema
+from app.schemas.update_evaluation import UpdateEvaluation
 
 
 router = APIRouter()
+"""
+API роутер для оценок задач.
+
+Этот роутер предоставляет эндпоинты для создания, чтения, редактирования и удаления оценок задач.
+"""
 
 
 @router.post("")
 async def write_evaluation(
-    evaluation_data: EvaluationCreate,
+    evaluation_data: CreateEvaluation,
     evaluation_service_dep: EvaluationServiceDep,
     task: TaskDep,
     user: ManagerDep,
     team: TeamDep
 ):
-    
-    return await evaluation_service_dep.create_evaluation(evaluation_data, user, team, task)
+    """
+    Создаёт новую оценку для задачи.
+
+    Только менеджер может создавать оценки.
+
+    Args:
+        evaluation_data (CreateEvaluation): Данные оценки (идентификатор задачи)
+        evaluation_service_dep (EvaluationService): Сервис для работы с оценками
+        task (Task): Задача, для которой создаётся оценка
+        user (User): Модели менеджер, создающий оценку
+        team (Team): Команда, к которой относится задача
+
+    Returns:
+        ResponseEvaluationSchema: Созданная оценка
+
+    Example:
+        POST /api/v1/teams/tasks/{task_id}/evaluations
+        Body: {"task_id": "uuid"}
+    """
+    evaluation = await evaluation_service_dep.create_evaluation(evaluation_data, user, team, task)
+    return ResponseEvaluationSchema(
+        id=evaluation.id,
+        rate=evaluation.rate,
+        author=evaluation.rater,
+        display_text=evaluation.rate.name
+    )
+
 
 @router.get("")
 async def read_evaluation(
@@ -26,18 +57,65 @@ async def read_evaluation(
     user: MemberOrManagerDep,
     team: TeamDep,
     evaluation: EvaluationDep
-): 
-    
-    return await evaluation_service_dep.get_evaluation(user, team, task, evaluation)
+):
+    """
+    Получает информацию об оценке задачи.
+
+    Args:
+        evaluation_service_dep (EvaluationService): Сервис для работы с оценками
+        task (Task): Задача, для которой получаем оценку
+        user (User): Текущий пользователь (для проверки прав доступа)
+        team (Team): Команда, к которой относится задача
+        evaluation (Evaluation): Запрашиваемая оценка
+
+    Returns:
+        ResponseEvaluationSchema: Информация об оценке
+
+    Example:
+        GET /api/v1/teams/tasks/{task_id}/evaluations/{evaluation_id}
+    """
+    evaluation = await evaluation_service_dep.get_evaluation(user, team, task, evaluation)
+    return ResponseEvaluationSchema(
+        id=evaluation.id,
+        rate=evaluation.rate,
+        author=evaluation.rater,
+        display_text=evaluation.rate.name
+    )
+
 
 @router.patch("/{evaluation_id}")
 async def edit_evaluation(
     evaluation: EvaluationDep,
-    evaluation_data: EvaluationUpdate,
+    evaluation_data: UpdateEvaluation,
     evaluation_service_dep: EvaluationServiceDep,
     user: ManagerDep,
     task: TaskDep,
     team: TeamDep
-): 
-    
-    return await evaluation_service_dep.update(evaluation_data, user, team, task, evaluation)
+):
+    """
+    Редактирует существующую оценку.
+
+    Только менеджер может редактировать оценки.
+
+    Args:
+        evaluation (Evaluation): Редактируемая оценка
+        evaluation_data (UpdateEvaluation): Новые данные оценки
+        evaluation_service_dep (EvaluationService): Сервис для работы с оценками
+        user (User): Модели менеджер, редактирующий оценку
+        task (Task): Задача, к которой относится оценка
+        team (Team): Команда, к которой относится задача
+
+    Returns:
+        ResponseEvaluationSchema: Обновлённая оценка
+
+    Example:
+        PATCH /api/v1/teams/tasks/{task_id}/evaluations/{evaluation_id}
+        Body: {"rate": 5}
+    """
+    evaluation = await evaluation_service_dep.update(evaluation_data, user, team, task, evaluation)
+    return ResponseEvaluationSchema(
+        id=evaluation.id,
+        rate=evaluation.rate,
+        author=evaluation.rater,
+        display_text=evaluation.rate.name
+    )

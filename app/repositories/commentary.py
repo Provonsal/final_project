@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from typing import Sequence
 from uuid import uuid4
 import uuid
 
@@ -12,15 +13,25 @@ from app.models import User
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-
 class CommentRepo(BaseRepo[Comment]):
+    """
+    Репозиторий для управления комментариями к задачам.
 
-    model=Comment
+    Provides CRUD operations for comments on tasks.
+    """
 
-    async def get_comments_by_task(
-        self,
-        task_id: uuid.UUID
-    ):
+    model = Comment
+
+    async def get_comments_by_task(self, task_id: uuid.UUID) -> Sequence[Comment]:
+        """
+        Получить все комментарии для задачи.
+
+        Args:
+            task_id: Идентификатор задачи
+
+        Returns:
+            list[Comment]: Список комментариев к задаче
+        """
         return (
             await self.session.scalars(
                 select(

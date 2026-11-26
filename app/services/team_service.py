@@ -1,18 +1,15 @@
-import uuid
 
-from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.exc.exceptions import AuthorizationError, BusinessRuleError
 from app.models import RoleEnum
-from app.models.models import Team, TeamInviteCode, TeamUser, User
+from app.models.models import Team, TeamInviteCode, User
 from app.repositories.team import TeamRepo
 from app.repositories.team_invite_code import TeamInviteCodeRepo
 from app.repositories.user import UserRepo
-from app.schemas.create_team import TeamCreate
-from app.schemas.task_create import TaskCreate
-from app.schemas.update_team import TeamUpdate
-from app.schemas.success import OperationSuccess
+from app.schemas.create_team import CreateTeam
+from app.schemas.update_team import UpdateTeam
+from app.schemas.response_success import ResponseOperationSuccess
 
 
 class TeamService:
@@ -28,13 +25,13 @@ class TeamService:
         """
         Возвращает список команд, доступных указанному пользователю.
 
-        Аргументы:
+        Args:
             user: Пользователь, для которого запрашиваются команды.
 
-        Возвращает:
+        Returns:
             list[Team]: Команды пользователя, полученные из TeamRepo.get_teams(user.id).
 
-        Исключения:
+        Raises:
             AuthorizationError: Если роль пользователя не MANAGER и не MEMBER.
 
         Требования:
@@ -44,20 +41,21 @@ class TeamService:
         if user.role not in (RoleEnum.MANAGER, RoleEnum.MEMBER):
             raise AuthorizationError(message="You are not allowed to do that.")
         
-        return await self.team_repo.get_teams(user.id)
+        teams = await self.team_repo.get_teams(user.id)
+        return teams
 
     async def get_team_users(self, team: Team, user: User):
         """
         Возвращает список участников команды.
 
-        Аргументы:
+        Args:
             team: Команда, участники которой запрашиваются.
             user: Пользователь, выполняющий запрос.
 
-        Возвращает:
+        Returns:
             list[User]: Список участников команды.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если роль пользователя не MANAGER/MEMBER
                 или пользователь не состоит в указанной команде.
 
@@ -76,20 +74,20 @@ class TeamService:
         
         return members_list
 
-    async def update(self, team: Team, user: User, data: TeamUpdate):
+    async def update(self, team: Team, user: User, data: UpdateTeam):
         """
         Частично обновляет команду.
 
-        Аргументы:
+        Args:
             team: Команда, которую нужно обновить.
             user: Пользователь, выполняющий обновление.
             data: Данные для частичного обновления команды.
 
-        Возвращает:
+        Returns:
             Team: Обновленная команда. Если изменений нет, возвращает текущую
                 команду без выполнения обновления.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если пользователь не состоит в команде.
             AuthorizationError: Если есть изменения, но пользователь не является
                 владельцем команды.
@@ -121,14 +119,14 @@ class TeamService:
         """
         Удаляет команду.
 
-        Аргументы:
+        Args:
             team: Команда, которую нужно удалить.
             user: Пользователь, выполняющий удаление.
 
-        Возвращает:
-            OperationSuccess: Результат успешной операции.
+        Returns:
+            ResponseOperationSuccess: Результат успешной операции.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если пользователь не состоит в команде.
             AuthorizationError: Если пользователь не является владельцем команды.
 
@@ -148,21 +146,21 @@ class TeamService:
 
         await self.team_repo.delete(team)
         await self.session.commit()
-        return OperationSuccess()
+        return True
 
 
     async def get_team(self, team: Team, user: User):
         """
         Возвращает команду, если у пользователя есть к ней доступ.
 
-        Аргументы:
+        Args:
             team: Команда, которую нужно получить.
             user: Пользователь, выполняющий запрос.
 
-        Возвращает:
+        Returns:
             Team: Запрошенная команда.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если пользователь не состоит в команде.
             AuthorizationError: Если пользователь не является владельцем команды
                 и не имеет роль MANAGER.
@@ -181,14 +179,14 @@ class TeamService:
         """
         Добавляет пользователя в команду по invite-коду.
 
-        Аргументы:
+        Args:
             user: Пользователь, который присоединяется к команде.
             invite_code: Строковый код приглашения.
 
-        Возвращает:
-            OperationSuccess: Результат успешной операции.
+        Returns:
+            ResponseOperationSuccess: Результат успешной операции.
 
-        Исключения:
+        Raises:
             BusinessRuleError: Если invite-код неактивен.
 
         Требования:
@@ -214,20 +212,20 @@ class TeamService:
         await self.team_repo.join_team(code.connected_to, user.id)
         
         await self.session.commit()
-        return OperationSuccess()
+        return True
 
     async def leave_team(self, user: User, team: Team):
         """
         Удаляет пользователя из команды.
 
-        Аргументы:
+        Args:
             user: Пользователь, который выходит из команды.
             team: Команда, которую нужно покинуть.
 
-        Возвращает:
-            OperationSuccess: Результат успешной операции.
+        Returns:
+            ResponseOperationSuccess: Результат успешной операции.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если пользователь не состоит в команде.
             AuthorizationError: Если роль пользователя не MEMBER и не MANAGER.
             BusinessRuleError: Если пользователь является владельцем команды.
@@ -260,20 +258,20 @@ class TeamService:
             await self.user_repo.change_role(user.id, RoleEnum.AUTH)
         
         await self.session.commit()
-        return OperationSuccess()
+        return True
 
-    async def create_team(self, user: User, data: TeamCreate):
+    async def create_team(self, user: User, data: CreateTeam):
         """
         Создает новую команду и invite-код для нее.
 
-        Аргументы:
+        Args:
             user: Пользователь, создающий команду.
             data: Данные для создания команды.
 
-        Возвращает:
+        Returns:
             Team: Созданная команда.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если роль пользователя не MANAGER.
             BusinessRuleError: Если имя команды уже занято.
             BusinessRuleError: Если max_per_team меньше 1.
@@ -311,7 +309,14 @@ class TeamService:
         )
 
         await self.team_repo.create(new_team)
-        await self.create_invite_code(new_team, user)
+
+        new_invite_code = TeamInviteCode(
+            creator=user.id,
+            team=new_team,
+            body=self.team_invite_code_repo.create_code_body()
+        )
+
+        await self.team_invite_code_repo.create(new_invite_code)
         await self.session.commit()
         return new_team
 
@@ -319,14 +324,14 @@ class TeamService:
         """
         Создает новый invite-код для команды.
 
-        Аргументы:
+        Args:
             team: Команда, для которой создается invite-код.
             user: Пользователь, создающий invite-код.
 
-        Возвращает:
-            OperationSuccess: Результат успешной операции.
+        Returns:
+            ResponseOperationSuccess: Результат успешной операции.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если команда не принадлежит пользователю.
             AuthorizationError: Если пользователь не является владельцем команды.
 
@@ -352,19 +357,19 @@ class TeamService:
 
         await self.team_invite_code_repo.create(new_invite_code)
         await self.session.commit()
-        return OperationSuccess()
+        return new_invite_code
 
     async def get_invite_code(self, team: Team, user: User):
         """Возвращает invite-код команды.
 
-        Аргументы:
+        Args:
             team: Команда, для которой запрашивается invite-код.
             user: Пользователь, выполняющий запрос.
 
-        Возвращает:
+        Returns:
             TeamInviteCode | None: Invite-код команды, полученный из репозитория.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если команда не принадлежит пользователю.
             AuthorizationError: Если пользователь не является владельцем команды.
 

@@ -2,12 +2,20 @@
 {% block title %}{{ "New Comment" if mode == "create" else "Edit Comment" }}{% endblock %}
 {% block content %}
 <h1>{{ "New Comment" if mode == "create" else "Edit Comment" }}</h1>
-{% if error %}<pre class="error">{{ error }}</pre>{% endif %}
-<form method="post">
-  <label>Text
-    <textarea name="text" {% if mode == "create" %}required{% endif %}>{{ comment.text }}</textarea>
-  </label>
-  <button type="submit">Save</button>
-  <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/comments">Cancel</a>
+
+{% if error %}
+  <div class="error-message">{{ error }}</div>
+{% endif %}
+
+<form method="post" class="styled-form">
+  <div class="form-group">
+    <label for="text">Comment Text *</label>
+    <textarea id="text" name="text" rows="4" required>{{ comment.text }}</textarea>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn">Save</button>
+    <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/comments">Cancel</a>
+  </div>
 </form>
 {% endblock %}

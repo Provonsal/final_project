@@ -1,10 +1,5 @@
 
-from functools import wraps
-from inspect import signature
-from typing import Any, Callable
-import uuid
 
-from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.exc.exceptions import AuthorizationError, WrongInputError
@@ -12,9 +7,8 @@ from app.models import RoleEnum
 from app.models.models import Comment, Task, Team, User
 from app.repositories.commentary import CommentRepo
 from app.repositories.team import TeamRepo
-from app.schemas.create_comment import CommentCreate
-from app.schemas.update_comment import CommentUpdate
-from app.schemas.success import OperationSuccess
+from app.schemas.create_comment import CreateComment
+from app.schemas.update_comment import UpdateComment
 
 
 
@@ -30,15 +24,15 @@ class CommentService:
         """
         Возвращает все комментарии задачи.
 
-        Аргументы:
+        Args:
             task: Задача, комментарии которой запрашиваются.
             user: Пользователь, выполняющий запрос.
             team: Команда, в контексте которой запрашиваются комментарии.
 
-        Возвращает:
+        Returns:
             list[Comment]: Комментарии указанной задачи.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если пользователь не состоит в команде.
             AuthorizationError: Если задача не относится к указанной команде.
 
@@ -60,16 +54,16 @@ class CommentService:
         """
         Возвращает комментарий после проверок доступа.
 
-        Аргументы:
+        Args:
             comment: Комментарий, который нужно получить.
             task: Задача, к которой должен относиться комментарий.
             user: Пользователь, выполняющий запрос.
             team: Команда, в контексте которой запрашивается комментарий.
 
-        Возвращает:
+        Returns:
             Comment: Переданный комментарий без изменений.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если пользователь не состоит в команде.
             AuthorizationError: Если задача не относится к указанной команде.
             AuthorizationError: Если комментарий не относится к указанной задаче.
@@ -89,20 +83,20 @@ class CommentService:
         
         return comment
 
-    async def create_comment(self, data: CommentCreate, user: User, task: Task, team: Team):
+    async def create_comment(self, data: CreateComment, user: User, task: Task, team: Team):
         """
         Создает комментарий к задаче.
 
-        Аргументы:
+        Args:
             data: Данные для создания комментария (тело комментария).
             user: Пользователь, создающий комментарий.
             task: Задача, к которой добавляется комментарий.
             team: Команда, в контексте которой создается комментарий.
 
-        Возвращает:
+        Returns:
             Comment: Созданный комментарий.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если пользователь не состоит в команде.
             AuthorizationError: Если задача не относится к указанной команде.
 
@@ -129,22 +123,22 @@ class CommentService:
         return new_comment
 
      
-    async def update(self, data: CommentUpdate, comment: Comment, task: Task, user: User, team: Team):
+    async def update(self, data: UpdateComment, comment: Comment, task: Task, user: User, team: Team):
         """
         Частично обновляет комментарий.
 
-        Аргументы:
+        Args:
             data: Данные для частичного обновления комментария.
             comment: Комментарий, который нужно обновить.
             task: Задача, в контексте которой выполняется обновление.
             user: Пользователь, выполняющий обновление.
             team: Команда, в контексте которой выполняется обновление.
 
-        Возвращает:
+        Returns:
             Comment: Обновленный комментарий. Если изменений нет, возвращает
                 переданный comment без обращения к репозиторию.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если пользователь не состоит в команде.
             AuthorizationError: Если задача не относится к указанной команде.
             AuthorizationError: Если комментарий не относится к указанной задаче.
@@ -185,16 +179,16 @@ class CommentService:
         """
         Удаляет комментарий.
 
-        Аргументы:
+        Args:
             comment: Комментарий, который нужно удалить.
             task: Задача, в контексте которой выполняется удаление.
             user: Пользователь, выполняющий удаление.
             team: Команда, в контексте которой выполняется удаление.
 
-        Возвращает:
+        Returns:
             OperationSuccess: Результат успешной операции.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если пользователь не состоит в команде.
             AuthorizationError: Если задача не относится к указанной команде.
             AuthorizationError: Если комментарий не относится к указанной задаче.
@@ -223,4 +217,4 @@ class CommentService:
 
         await self.comment_repo.delete(comment)
         await self.session.commit()
-        return OperationSuccess()
+        return True

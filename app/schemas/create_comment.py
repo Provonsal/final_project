@@ -1,10 +1,15 @@
-from datetime import datetime
-import uuid
 
-from pydantic import BaseModel
-
-from app.models.TaskStatusEnum import TaskStatusEnum
+from pydantic import BaseModel, Field
 
 
-class CommentCreate(BaseModel):
-    text: str
+class CreateComment(BaseModel):
+    """
+    Схема для создания нового комментария.
+
+    Args:
+        text: Текст комментария
+
+    Example:
+        text: "Отличная работа!"
+    """
+    text: str = Field(..., description="Текст комментария")

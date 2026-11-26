@@ -1,3 +1,5 @@
+from html import escape
+
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
@@ -19,10 +21,16 @@ def _meeting_defaults(data: dict | None = None) -> dict:
 async def list_meetings(request: Request, team_id: str):
     if (redir := redirect_if_anonymous(request)):
         return redir
+
+    # Получаем информацию о команде
+    team_r = await api_call(request, "GET", f"/api/v1/teams/{team_id}")
+
+    # Получаем встречи команды
     r = await api_call(request, "GET", f"/api/v1/teams/{team_id}/meetings")
     return templates.TemplateResponse(
         request, "meetings/list.html",
         {"team_id": team_id,
+         "team": team_r.json() if ok(team_r) else None,
          "meetings": r.json() if ok(r) else [],
          "error": None if ok(r) else r.text},
     )
@@ -76,7 +84,8 @@ async def meeting_detail(request: Request, team_id: str, meeting_id: str):
         return redir
     r = await api_call(request, "GET", f"/api/v1/teams/{team_id}/meetings/{meeting_id}")
     if not ok(r):
-        return HTMLResponse(f"<pre class='error'>{r.text}</pre>")
+        safe_error = escape(r.text)
+        return HTMLResponse(f"<pre class='error'>{safe_error}</pre>")
     return templates.TemplateResponse(
         request, "meetings/detail.html",
         {"team_id": team_id, "meeting_id": meeting_id, "meeting": r.json()},

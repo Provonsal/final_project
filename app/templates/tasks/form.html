@@ -2,33 +2,48 @@
 {% block title %}{{ "New Task" if mode == "create" else "Edit Task" }}{% endblock %}
 {% block content %}
 <h1>{{ "New Task" if mode == "create" else "Edit Task" }}</h1>
-{% if error %}<pre class="error">{{ error }}</pre>{% endif %}
-<form method="post">
-  <label>Title
-    <input name="title" value="{{ task.title }}" {% if mode == "create" %}required{% endif %}>
-  </label>
-  <label>Description
-    <textarea name="description" {% if mode == "create" %}required{% endif %}>{{ task.description }}</textarea>
-  </label>
+
+{% if error %}
+  <div class="error-message">{{ error }}</div>
+{% endif %}
+
+<form method="post" class="styled-form">
+  <div class="form-group">
+    <label for="title">Title *</label>
+    <input type="text" id="title" name="title" value="{{ task.title }}" required>
+  </div>
+
+  <div class="form-group">
+    <label for="description">Description *</label>
+    <textarea id="description" name="description" rows="4" required>{{ task.description }}</textarea>
+  </div>
+
+  <div class="form-group">
+    <label for="assignee">Assignee (UUID)</label>
+    <input type="text" id="assignee" name="assignee" value="{{ task.assignee }}"
+           placeholder="UUID of the user">
+  </div>
+
+  <div class="form-group">
+    <label for="due_date">Due Date *</label>
+    <input type="datetime-local" id="due_date" name="due_date" value="{{ task.due_date }}"
+           placeholder="2026-11-03T13:29:07Z" required>
+  </div>
+
   {% if mode == "create" %}
-    <label>Assignee (UUID)
-      <input name="assignee" value="{{ task.assignee }}" required>
-    </label>
-  {% endif %}
-  <label>Due date (ISO, напр. <code>2026-11-03T13:29:07Z</code>)
-    <input name="due_date" value="{{ task.due_date }}" placeholder="2026-11-03T13:29:07Z"
-           {% if mode == "create" %}required{% endif %}>
-  </label>
-  {% if mode == "create" %}
-    <label>Status
-      <select name="status">
+    <div class="form-group">
+      <label for="status">Status</label>
+      <select id="status" name="status">
         {% for k, v in status_labels.items() %}
           <option value="{{ k }}" {% if task.status == k %}selected{% endif %}>{{ k }} — {{ v }}</option>
         {% endfor %}
       </select>
-    </label>
+    </div>
   {% endif %}
-  <button type="submit">Save</button>
-  <a class="btn" href="/views/teams/{{ team_id }}/tasks">Cancel</a>
+
+  <div class="form-actions">
+    <button type="submit" class="btn">Save</button>
+    <a class="btn" href="/views/teams/{{ team_id }}/tasks">Cancel</a>
+  </div>
 </form>
 {% endblock %}

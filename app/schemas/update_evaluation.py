@@ -1,11 +1,19 @@
-from datetime import datetime
-import uuid
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-from app.models.TaskStatusEnum import TaskStatusEnum
 from app.models.RateEnum import RateEnum
 
 
-class EvaluationUpdate(BaseModel):
-    rate: RateEnum | None = None
+class UpdateEvaluation(BaseModel):
+    """
+    Схема для частичного обновления оценки.
+
+    Все поля являются опциональными (можно обновлять часть полей).
+
+    Args:
+        rate: Новое значение оценки (Enum: excellent, good, neutral, poor)
+
+    Example:
+        rate: "excellent"
+    """
+    rate: RateEnum | None = Field(None, description="Новое значение оценки")

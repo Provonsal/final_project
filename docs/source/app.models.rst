@@ -4,41 +4,19 @@ app.models package
 Submodules
 ----------
 
-app.models.RateEnum module
---------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: app.models.RateEnum
-   :show-inheritance:
-
-app.models.RoleEnum module
---------------------------
-
-.. automodule:: app.models.RoleEnum
-   :show-inheritance:
-
-app.models.TaskStatusEnum module
---------------------------------
-
-.. automodule:: app.models.TaskStatusEnum
-   :show-inheritance:
-
-app.models.base module
-----------------------
-
-.. automodule:: app.models.base
-   :show-inheritance:
-
-app.models.models module
-------------------------
-
-.. automodule:: app.models.models
-   :show-inheritance:
+   app.models.RateEnum
+   app.models.RoleEnum
+   app.models.TaskStatusEnum
+   app.models.base
+   app.models.models
 
 Module contents
 ---------------
 
 .. automodule:: app.models
-   :no-members:
-   :no-inherited-members:
-   :ignore-module-all:
-   :no-index:
+   :members:
+   :show-inheritance:
+   :undoc-members:

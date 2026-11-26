@@ -1,10 +1,17 @@
-from datetime import datetime
-import uuid
 
 from pydantic import BaseModel
 
-from app.models.TaskStatusEnum import TaskStatusEnum
 
+class UpdateRefreshToken(BaseModel):
+    """
+    Схема для частичного обновления refresh-токена.
 
-class RefreshTokenUpdate(BaseModel):
+    Все поля являются опциональными (можно обновлять часть полей).
+
+    Attributes:
+        revoked: Статус отзыва токена (True/False)
+
+    Example:
+        UpdateRefreshToken(revoked=True)
+    """
     revoked: bool | None = None

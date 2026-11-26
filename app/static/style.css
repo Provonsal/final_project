@@ -7,6 +7,10 @@ body {
   color: #222;
   line-height: 1.4;
 }
+
+.format-datetime {
+  font-variant-numeric: tabular-nums;
+}
 nav {
   display: flex;
   flex-wrap: wrap;
@@ -76,6 +80,12 @@ form button:hover, .btn:hover { background: #f0f0f0; }
 .btn-danger { color: #900; border-color: #f0c0c0; }
 .btn-danger:hover { background: #ffecec; }
 
+.btn-small {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.85rem;
+  margin: 0 0.25rem 0.25rem 0;
+}
+
 .inline-form {
   display: flex;
   flex-wrap: wrap;
@@ -114,6 +124,59 @@ pre {
   color: #334;
   border: 1px solid #dde;
 }
+.team-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.info-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.info-card .label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+
+.info-card p {
+  margin: 0;
+  font-size: 1rem;
+  color: #1e293b;
+  line-height: 1.5;
+}
+
+.info-value {
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.meeting-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.meeting-info .info-card {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.meeting-info .info-card .label {
+  color: #15803d;
+}
+
 .flash {
   padding: 0.6rem 0.9rem;
   border-radius: 4px;
@@ -122,3 +185,12 @@ pre {
 }
 .flash-error { background: #ffecec; border-color: #f0a0a0; color: #900; }
 .flash-ok    { background: #eaffea; border-color: #a0e0a0; color: #060; }
+
+.error-message {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #c2410c;
+  padding: 1rem;
+  margin: 1rem 0;
+  border-radius: 6px;
+}

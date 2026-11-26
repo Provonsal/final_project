@@ -2,20 +2,34 @@
 {% block title %}{{ "New Evaluation" if mode == "create" else "Edit Evaluation" }}{% endblock %}
 {% block content %}
 <h1>{{ "New Evaluation" if mode == "create" else "Edit Evaluation" }}</h1>
-{% if error %}<pre class="error">{{ error }}</pre>{% endif %}
-<form method="post">
+
+{% if error %}
+  <div class="error-message">{{ error }}</div>
+{% endif %}
+
+<form method="post" class="styled-form">
   {% if mode == "create" %}
     <input type="hidden" name="task_id" value="{{ task_id }}">
-    <p>Task ID: <code>{{ task_id }}</code></p>
+    <div class="form-group">
+      <label for="task_id">Task ID</label>
+      <input type="text" id="task_id" value="{{ task_id }}" disabled>
+    </div>
   {% endif %}
-  <label>Rate
-    <select name="rate">
-      {% for r in rates %}
-        <option value="{{ r }}" {% if evaluation.rate == r %}selected{% endif %}>{{ r }}</option>
+
+  <div class="form-group">
+    <label for="rate">Evaluation Rate *</label>
+    <select id="rate" name="rate" required>
+      <option value="">Select a rating</option>
+      {% for r in rates[1:] %}
+        <option value="{{ r }}" {% if evaluation and evaluation.rate == r %}selected{% endif %}>{{ r }}/5</option>
       {% endfor %}
     </select>
-  </label>
-  <button type="submit">Save</button>
-  <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/evaluation">Cancel</a>
+    <small>Rate from 1 to 5</small>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn">Save</button>
+    <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/evaluation">Cancel</a>
+  </div>
 </form>
 {% endblock %}

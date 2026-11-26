@@ -2,36 +2,72 @@
 {% block title %}Comments{% endblock %}
 {% block content %}
 <h1>Comments</h1>
+
+<div class="comments-info">
+  <div class="info-card">
+    <span class="label">Total Comments:</span>
+    <p class="info-value">{{ comments | length }}</p>
+  </div>
+</div>
+
+{% if error %}
+  <div class="error-message">{{ error }}</div>
+{% endif %}
+
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Author</th>
+      <th>Text</th>
+      <th>Created At</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for c in comments %}
+    <tr>
+      <td><code>{{ c.id }}</code></td>
+      <td>
+        <div class="author-info">
+          {% if c.author %}
+            
+            <strong>{{ c.author }}</strong>
+            
+          {% else %}
+            Unknown
+          {% endif %}
+        </div>
+      </td>
+      <td>
+        <div class="comment-text">{{ c.text }}</div>
+      </td>
+      <td>{{ c.created_at | format_datetime }}</td>
+      <td>
+        {% if can('team:' ~ team_id ~ ':task:' ~ task_id ~ ':comment:' ~ c.id ~ ':update') %}
+          <a class="btn btn-small" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/comments/{{ c.id }}/edit">Edit</a>
+        {% endif %}
+        {% if can('team:' ~ team_id ~ ':task:' ~ task_id ~ ':comment:' ~ c.id ~ ':delete') %}
+          <form method="post"
+                action="/views/teams/{{ team_id }}/tasks/{{ task_id }}/comments/{{ c.id }}/delete"
+                style="display:inline" onsubmit="return confirm('Удалить комментарий?')">
+            <button class="btn btn-danger btn-small" type="submit">Delete</button>
+          </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% else %}
+    <tr>
+      <td colspan="5" style="text-align: center; color: #666;">No comments yet</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
 <p>
   {% if can('team:' ~ team_id ~ ':task:' ~ task_id ~ ':comment:create') %}
     <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/comments/new">+ New Comment</a>
   {% endif %}
   <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}">Back to task</a>
 </p>
-{% if error %}<pre class="error">{{ error }}</pre>{% endif %}
-<table>
-  <thead><tr><th>ID</th><th>Text</th><th></th></tr></thead>
-  <tbody>
-  {% for c in comments %}
-    <tr>
-      <td><code>{{ c.id }}</code></td>
-      <td>{{ c.text }}</td>
-      <td>
-        {% if can('team:' ~ team_id ~ ':task:' ~ task_id ~ ':comment:' ~ c.id ~ ':update') %}
-          <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/comments/{{ c.id }}/edit">Edit</a>
-        {% endif %}
-        {% if can('team:' ~ team_id ~ ':task:' ~ task_id ~ ':comment:' ~ c.id ~ ':delete') %}
-          <form method="post"
-                action="/views/teams/{{ team_id }}/tasks/{{ task_id }}/comments/{{ c.id }}/delete"
-                style="display:inline" onsubmit="return confirm('Удалить комментарий?')">
-            <button class="btn btn-danger" type="submit">Delete</button>
-          </form>
-        {% endif %}
-      </td>
-    </tr>
-  {% else %}
-    <tr><td colspan="3">Пусто.</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
 {% endblock %}

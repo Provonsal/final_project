@@ -1,20 +1,13 @@
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from functools import wraps
 from inspect import signature
-import uuid
 
-from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.exc.exceptions import AuthorizationError, WrongInputError
-from app.models import RoleEnum
-from app.models.models import Meeting, Task, Team, TeamInviteCode, TeamUser, User
+from app.models.models import Task, Team, User
 from app.repositories.meet import MeetingRepo
 from app.repositories.team import TeamRepo
-from app.repositories.team_invite_code import TeamInviteCodeRepo
-from app.repositories.user import UserRepo
-from app.schemas.create_meeting import MeetingCreate
-from app.schemas.update_meeting import MeetingUpdate
 
 
 def requires_access(method):
@@ -48,17 +41,17 @@ class CalendarService:
         """
         Проверяет базовый доступ пользователя к команде и (опционально) задаче.
 
-        Аргументы:
+        Args:
             user: Пользователь, чей доступ проверяется.
             team: Команда, к которой проверяется доступ.
             task: Задача для дополнительной проверки принадлежности к команде
                 (если передана). В текущих методах CalendarService не используется,
                 но оставлен для совместимости с общим декоратором @requires_access.
 
-        Возвращает:
+        Returns:
             None
 
-        Исключения:
+        Raises:
             AuthorizationError: Если пользователь не состоит в команде team.
             AuthorizationError: Если роль пользователя не MANAGER и не MEMBER.
             AuthorizationError: Если task передан и task.team_id != team.id.
@@ -88,18 +81,18 @@ class CalendarService:
         """
         Возвращает встречи команды в заданном временном диапазоне.
 
-        Аргументы:
+        Args:
             team: Команда, встречи которой запрашиваются.
             user: Пользователь, выполняющий запрос.
             date_from: Нижняя граница диапазона (включительно).
             date_until: Верхняя граница диапазона. Если None — верхняя граница
                 не ограничивается.
 
-        Возвращает:
+        Returns:
             list[Meeting]: Встречи команды в диапазоне [date_from, date_until],
                 полученные из MeetingRepo.get_all_meetings_from_to.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если пользователь не состоит в команде.
             AuthorizationError: Если роль пользователя не MANAGER и не MEMBER.
 

@@ -1,7 +1,25 @@
 {% extends "base.html" %}
-{% block title %}Team{% endblock %}
+{% block title %}Team: {{ team.name }}{% endblock %}
 {% block content %}
-<h1>Team</h1>
+<h1>Team: {{ team.name }}</h1>
+
+<div class="team-info">
+  <div class="info-card">
+    <span class="label">Description:</span>
+    <p>{{ team.description or "No description" }}</p>
+  </div>
+  <div class="info-card">
+    <span class="label">Max Members:</span>
+    <p class="info-value">{{ team.max_members or "Unlimited" }}</p>
+  </div>
+</div>
+
+{% if error %}
+  <div class="error-message">{{ error }}</div>
+{% endif %}
+
+<hr>
+
 <p>
   {% if can('team:' ~ team_id ~ ':update') %}
     <a class="btn" href="/views/teams/{{ team_id }}/edit">Edit</a>
@@ -22,5 +40,6 @@
     </form>
   {% endif %}
 </p>
-<pre>{{ team | tojson(indent=2) }}</pre>
+
+<a class="btn" href="/views/teams/{{ team_id }}">Back to teams</a>
 {% endblock %}

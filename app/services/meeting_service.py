@@ -1,20 +1,15 @@
-from datetime import datetime
-import uuid
+from datetime import UTC, datetime
 
-from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.exc.exceptions import AuthorizationError, WrongInputError, BusinessRuleError
 from app.models.RoleEnum import RoleEnum
-from app.models.models import Meeting, Team, TeamInviteCode, TeamUser, User
+from app.models.models import Meeting, MeetingInviteCode, Team, User
 from app.repositories.meet import MeetingRepo
+from app.repositories.meeting_invite_code import MeetingInviteCodeRepo
 from app.repositories.team import TeamRepo
-from app.repositories.team_invite_code import TeamInviteCodeRepo
-from app.repositories.user import UserRepo
-from app.schemas.create_meeting import MeetingCreate
-from app.schemas.success import OperationSuccess
-from app.schemas.update_meeting import MeetingUpdate
-from sqlalchemy.exc import NoResultFound
+from app.schemas.create_meeting import CreateMeeting
+from app.schemas.update_meeting import UpdateMeeting
 
 
 class MeetingService:
@@ -24,19 +19,20 @@ class MeetingService:
         self.session = session
         self.meeting_repo = MeetingRepo(session)
         self.team_repo = TeamRepo(session)
+        self.meeting_invite_code_repo = MeetingInviteCodeRepo(session)
 
     async def get_meetings(self, team: Team, user: User):
         """
         Возвращает все встречи команды.
 
-        Аргументы:
+        Args:
             team: Команда, встречи которой запрашиваются.
             user: Пользователь, выполняющий запрос.
 
-        Возвращает:
+        Returns:
             list[Meeting]: Список встреч команды.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если пользователь не состоит в команде.
 
         Требования:
@@ -46,21 +42,21 @@ class MeetingService:
         if not await self.team_repo.belongs_to_team(team.id, user.id):
             raise AuthorizationError(message="You are not allowed to do that.")
         
-        return await self.meeting_repo.get_all_meetings(team.id)
+        return await self.meeting_repo.get_all_meetings(team.id, user.id)
     
     async def get_meeting(self, meeting: Meeting, team: Team, user: User):
         """
         Возвращает встречу, если у пользователя есть к ней доступ.
 
-        Аргументы:
+        Args:
             meeting: Встреча, которую нужно получить.
             team: Команда, к которой должна относиться встреча.
             user: Пользователь, выполняющий запрос.
 
-        Возвращает:
+        Returns:
             Meeting: Запрошенная встреча.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если пользователь не состоит в команде.
             AuthorizationError: Если пользователь не является участником встречи.
             WrongInputError: Если встреча не относится к указанной команде.
@@ -83,19 +79,19 @@ class MeetingService:
 
         return meeting
 
-    async def create_meeting(self, data: MeetingCreate, team: Team, user: User):
+    async def create_meeting(self, data: CreateMeeting, team: Team, user: User):
         """
         Создает встречу в команде.
 
-        Аргументы:
+        Args:
             data: Данные для создания встречи (starts_at, ends_at, max_members).
             team: Команда, в которой создается встреча.
             user: Пользователь, создающий встречу.
 
-        Возвращает:
+        Returns:
             Meeting: Созданная встреча.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если пользователь не состоит в команде.
             AuthorizationError: Если роль пользователя не MANAGER.
             BusinessRuleError: Если starts_at >= ends_at.
@@ -133,7 +129,7 @@ class MeetingService:
         if data.max_members > team.max_per_team:
             raise BusinessRuleError(message="Meeting max members cannot exceed team max members.")
 
-        if data.starts_at < datetime.now():
+        if data.starts_at < datetime.now(UTC):
             raise BusinessRuleError(message="Meeting start time cannot be in the past.")
 
         new_meeting = Meeting(
@@ -144,25 +140,33 @@ class MeetingService:
             user=user
         )
 
+        new_invite_code = MeetingInviteCode(
+            meeting=new_meeting,
+            body=self.meeting_invite_code_repo.create_code_body(),
+            user=user,
+            uses_left=-1  # -1 означает неограниченное количество использований
+        )
+
         await self.meeting_repo.create(new_meeting)
+        await self.meeting_invite_code_repo.create(new_invite_code)
         await self.session.commit()
         return new_meeting
 
-    async def update(self, meeting: Meeting, team: Team, data: MeetingUpdate, user: User):
+    async def update(self, meeting: Meeting, team: Team, data: UpdateMeeting, user: User):
         """
         Частично обновляет встречу.
 
-        Аргументы:
+        Args:
             meeting: Встреча, которую нужно обновить.
             team: Команда, к которой должна относиться встреча.
             data: Данные для частичного обновления встречи.
             user: Пользователь, выполняющий обновление.
 
-        Возвращает:
+        Returns:
             Meeting: Обновленная встреча. Если изменений нет, возвращает текущую
                 встречу без выполнения обновления.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если пользователь не состоит в команде.
             AuthorizationError: Если роль пользователя не MANAGER.
             WrongInputError: Если встреча не относится к указанной команде.
@@ -204,15 +208,15 @@ class MeetingService:
         """
         Удаляет встречу.
 
-        Аргументы:
+        Args:
             meeting: Встреча, которую нужно удалить.
             team: Команда, к которой должна относиться встреча.
             user: Пользователь, выполняющий удаление.
 
-        Возвращает:
-            OperationSuccess: Результат успешной операции.
+        Returns:
+            ResponseOperationSuccess: Результат успешной операции.
 
-        Исключения:
+        Raises:
             AuthorizationError: Если пользователь не состоит в команде.
             AuthorizationError: Если роль пользователя не MANAGER.
             WrongInputError: Если встреча не относится к указанной команде.
@@ -242,4 +246,172 @@ class MeetingService:
         
         await self.meeting_repo.delete(meeting)
         await self.session.commit()
-        return OperationSuccess()
+        return True
+
+    async def join_meeting(self, team: Team, invite_code: str, user: User):
+        """
+        Добавляет пользователя в список участников встречи по коду приглашения.
+
+        Args:
+            team: Команда, к которой принадлежит встреча.
+            invite_code: Код приглашения для присоединения к встрече.
+            user: Пользователь, который хочет присоединиться к встрече.
+
+        Returns:
+            Meeting: Обновленная встреча с добавленным участником.
+
+        Raises:
+            BuisinessRuleError: Если код приглашения не активен.
+            AuthorizationError: Если пользователь не состоит в команде.
+            BusinessRuleError: Если встреча уже заполнена (достигнут max_members).
+            AuthorizationError: Если пользователь уже является участником встречи.
+
+        Требования:
+            Пользователь должен состоять в команде team.
+            Количество участников встречи не должно превышать max_members.
+            Пользователь не должен быть уже участником встречи.
+
+        Побочные эффекты:
+            Добавляет пользователя в список участников встречи и выполняет commit сессии.
+        """
+
+        code = await self.meeting_invite_code_repo.get_by_code(invite_code)
+        meeting = await self.meeting_repo.get_by_id(code.connected_to)
+
+        if not code.active: 
+            raise BusinessRuleError(message="Invite code not active")
+        if not await self.team_repo.belongs_to_team(team.id, user.id):
+            raise AuthorizationError(message="You are not allowed to do that.")
+        if await self.meeting_repo.belongs_to_meeting(code.connected_to, user.id):
+            raise AuthorizationError(message="You are already a participant of this meeting.")
+
+        current_participants = await self.meeting_repo.get_participants_count(code.connected_to)
+        
+        if current_participants >= meeting.max_members:
+            raise BusinessRuleError(message="Meeting is already full.")
+        if code.uses_left == 0:
+            raise BusinessRuleError(message="Invite code has no uses left.")
+        if code.uses_left > 0:
+            code.uses_left -= 1
+            await self.meeting_invite_code_repo.update(code.id, {"uses_left": code.uses_left})
+
+        await self.meeting_repo.add_participant(code.meeting, user)
+        await self.session.commit()
+        return True
+
+    async def leave_meeting(self, team: Team, meeting: Meeting, user: User):
+        """
+        Удаляет пользователя из списка участников встречи.
+
+        Args:
+            team: Команда, к которой принадлежит встреча.
+            meeting: Встреча, из которой пользователь хочет выйти.
+            user: Пользователь, который хочет выйти из встречи.
+
+        Returns:
+            Meeting: Обновленная встреча без участника.
+
+        Raises:
+            AuthorizationError: Если пользователь не состоит в команде.
+            AuthorizationError: Если пользователь не является участником встречи.
+
+        Требования:
+            Пользователь должен состоять в команде team.
+            Пользователь должен быть участником встречи.
+
+        Побочные эффекты:
+            Удаляет пользователя из списка участников встречи и выполняет commit сессии.
+        """
+
+        if meeting.related_team != team.id:
+            raise WrongInputError(message="Meeting does not belong to the specified team.")
+
+        if not await self.team_repo.belongs_to_team(team.id, user.id):
+            raise AuthorizationError(message="You are not allowed to do that.")
+
+        if not await self.meeting_repo.belongs_to_meeting(meeting.id, user.id):
+            raise AuthorizationError(message="You are not a participant of this meeting.")
+
+        result = await self.meeting_repo.remove_participant(meeting, user)
+        if result:
+            await self.session.commit()
+            return True
+        else:
+            await self.session.rollback()
+            return False
+
+    async def create_invite_code(self, team: Team, meeting: Meeting, user: User, uses: int):
+        """
+        Создает код приглашения для встречи.
+
+        Args:
+            team: Команда, к которой принадлежит встреча.
+            meeting: Встреча, для которой создается код приглашения.
+            user: Пользователь, создающий код приглашения.
+
+        Returns:
+            str: Сгенерированный код приглашения.
+
+        Raises:
+            AuthorizationError: Если пользователь не является создателем встречи.
+
+        Требования:
+            Пользователь должен быть создателем встречи.
+
+        Побочные эффекты:
+            Создает код приглашения и выполняет commit сессии.
+        """
+
+        if not await self.team_repo.belongs_to_team(team.id, user.id):
+            raise AuthorizationError(message="You are not allowed to do that.")
+
+        if meeting.related_team != team.id:
+            raise WrongInputError(message="Meeting does not belong to the specified team.")
+
+        if meeting.creator != user.id:
+            raise AuthorizationError(message="You do not have permission to create an invite code for this meeting.")
+
+
+        await self.meeting_invite_code_repo.deactivate_all_codes_for_meeting(meeting.id)
+        
+        new_invite_code = MeetingInviteCode(
+            meeting=meeting,
+            body=self.meeting_invite_code_repo.create_code_body(),
+            user=user,
+            uses_left=uses
+        )
+        await self.meeting_invite_code_repo.create(new_invite_code)
+        await self.session.commit()
+        return new_invite_code
+
+    async def get_invite_code(self, team: Team, meeting: Meeting, user: User):
+        """
+        Возвращает код приглашения для встречи.
+
+        Args:
+            team: Команда, к которой принадлежит встреча.
+            meeting: Встреча, для которой запрашивается код приглашения.
+            user: Пользователь, запрашивающий код приглашения.
+
+        Returns:
+            str: Код приглашения для встречи.
+
+        Raises:
+            AuthorizationError: Если пользователь не является создателем встречи.
+
+        Требования:
+            Пользователь должен быть создателем встречи.
+
+        """
+
+        if not await self.team_repo.belongs_to_team(team.id, user.id):
+            raise AuthorizationError(message="You are not allowed to do that.")
+
+        if meeting.related_team != team.id:
+            raise WrongInputError(message="Meeting does not belong to the specified team.")
+
+        if meeting.creator != user.id:
+            raise AuthorizationError(message="You do not have permission to get an invite code for this meeting.")
+
+        invite_code = await self.meeting_invite_code_repo.get_by_meeting_id(meeting.id)
+        return invite_code
