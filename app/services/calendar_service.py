@@ -67,7 +67,7 @@ class CalendarService:
         if task is not None:
 
             if task.team_id != team.id:
-                raise AuthorizationError(message="You are not allowed to do that.")
+                raise WrongInputError(message="You are not allowed to do that.")
             
             
     @requires_access
@@ -109,7 +109,7 @@ class CalendarService:
             date_from = datetime.now(UTC)
 
         if date_until and date_from >= date_until:
-            WrongInputError("date_from must be <= date_until")
+            raise WrongInputError("date_from must be <= date_until")
 
         return await self.meeting_repo.get_all_meetings_from_to(
             team.id, 

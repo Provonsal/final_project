@@ -8,6 +8,7 @@ from app.dependencies import ManagerDep, MeetingDep, MeetingServiceDep, MemberOr
 from app.schemas.create_meeting import CreateMeeting
 from app.schemas.response_invite_code import ResponseInviteCodeSchema
 from app.schemas.response_meeting import ResponseMeetingSchema
+from app.schemas.response_meeting_invite_code import ResponseMeetingInviteCodeSchema
 from app.schemas.response_success import ResponseOperationFailure, ResponseOperationSuccess
 from app.schemas.update_meeting import UpdateMeeting
 
@@ -141,10 +142,10 @@ async def get_invite_code(
         GET /api/v1/teams/meetings/{meeting_id}/invite_code
     """
     code = await meeting_service_dep.get_invite_code(team, meeting, user)
-    return ResponseInviteCodeSchema(
+    return ResponseMeetingInviteCodeSchema(
         id=code.id,
         code=code.body,
-        team_id=code.connected_to,
+        meeting_id=code.connected_to,
         is_active=code.active,
         creator=code.creator
     )

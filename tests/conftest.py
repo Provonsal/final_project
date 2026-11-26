@@ -1,3 +1,5 @@
+import os
+
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
@@ -9,37 +11,33 @@ from testcontainers.postgres import PostgresContainer
 from app.database import get_session, Base
 from app.main import app  # или from app.main import app
 
+IS_CI = os.getenv("CI") == "true"
 
-# 1. СИНХРОННАЯ фикстура для контейнера (scope="session")
-# Это обходит конфликты asyncio scope, так как запуск Docker — синхронная операция
-@pytest.fixture(scope="session")
-def postgres_url():
-    with PostgresContainer("postgres:17-alpine") as postgres:
+@pytest_asyncio.fixture(scope="session")
+async def postgres_container():
+    """Запускаем PostgreSQL в контейнере ТОЛЬКО если мы не в CI"""
+    if IS_CI:
+        
+        yield os.getenv("DATABASE_URL")
+        return
+
+    with PostgresContainer("postgres:15-alpine") as postgres:
         url = postgres.get_connection_url()
-        # Заменяем драйвер для asyncpg
-        yield url.replace("postgresql+psycopg2://", "postgresql+asyncpg://")
+        async_url = url.replace("postgresql://", "postgresql+asyncpg://")
+        yield async_url
 
 
-# 2. Асинхронный engine (scope="function")
-# Пересоздание таблиц на каждый тест занимает ~0.1с и гарантирует изоляцию
-@pytest_asyncio.fixture(scope="function")
-async def engine(postgres_url):
-    engine = create_async_engine(
-        postgres_url,
-        echo=False,
-        pool_pre_ping=True,
-    )
+@pytest_asyncio.fixture(scope="session")
+async def engine(postgres_container):
+    engine = create_async_engine(postgres_container, echo=False, pool_pre_ping=True)
     
-    # Создаем таблицы
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     
     yield engine
     
-    # Чистим за собой после теста
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
-    
     await engine.dispose()
 
 

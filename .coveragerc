@@ -1,0 +1,19 @@
+[run]
+source = app
+omit =
+    tests/*
+    app/migrations/*
+    app/main.py
+    app/database.py
+    */config.py
+    */__init__.py
+    */dependencies.py
+    app/views/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if __name__ == .__main__.:
+    raise NotImplementedError
+show_missing = true
