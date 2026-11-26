@@ -1,8 +1,10 @@
 
+from datetime import UTC, datetime
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.exc.exceptions import AuthorizationError, WrongInputError
-from app.models import RateEnum, RoleEnum
+from app.exc.exceptions import AuthorizationError, BusinessRuleError, WrongInputError
+from app.models import RateEnum, RoleEnum, TaskStatusEnum
 from app.models.models import Task, TaskRate, Team, User
 
 from app.repositories.evaluation import EvaluationRepo
@@ -242,3 +244,89 @@ class TaskService:
         await self.task_repo.delete(task)
         await self.session.commit()
         return True
+
+    async def start_task(self, team: Team, user: User, task: Task):
+        if not await self.team_repo.belongs_to_team(team.id, user.id):
+            raise AuthorizationError(message="You are not allowed to do that.")
+
+        if task.team_id != team.id:
+            raise WrongInputError(message="Task does not belong to the specified team.")
+
+        if user.role != RoleEnum.MEMBER:
+            raise AuthorizationError(message="You are not allowed to do that.")
+
+        if task.status != TaskStatusEnum.OPEN:
+            raise BusinessRuleError(message="Task is not ready to start or already started.")
+
+        task = await self.task_repo.start_task(task.id)
+        await self.session.commit()
+        return task
+
+    async def end_task(self, team: Team, user: User, task: Task):
+        if not await self.team_repo.belongs_to_team(team.id, user.id):
+            raise AuthorizationError(message="You are not allowed to do that.")
+
+        if task.team_id != team.id:
+            raise WrongInputError(message="Task does not belong to the specified team.")
+
+        if user.role != RoleEnum.MEMBER:
+            raise AuthorizationError(message="You are not allowed to do that.")
+
+        if task.status != TaskStatusEnum.IN_PROGRESS:
+            raise BusinessRuleError(message="Task is not in progress to end it")
+
+        task = await self.task_repo.end_task(task.id)
+        await self.session.commit()
+        return task
+
+    async def get_tasks(
+        self,
+        user: User,
+        team: Team,
+        date_from: datetime | None = None,
+        date_until: datetime | None = None,
+    ):
+        """
+        Возвращает встречи команды в заданном временном диапазоне.
+
+        Args:
+            team: Команда, встречи которой запрашиваются.
+            user: Пользователь, выполняющий запрос.
+            date_from: Нижняя граница диапазона (включительно).
+            date_until: Верхняя граница диапазона. Если None — верхняя граница
+                не ограничивается.
+
+        Returns:
+            list[Meeting]: Встречи команды в диапазоне [date_from, date_until],
+                полученные из MeetingRepo.get_all_meetings_from_to.
+
+        Raises:
+            AuthorizationError: Если пользователь не состоит в команде.
+            AuthorizationError: Если роль пользователя не MANAGER и не MEMBER.
+
+        Требования:
+            Пользователь должен состоять в команде team.
+            Роль пользователя должна быть MANAGER или MEMBER.
+
+        Поведение:
+            Доступ проверяется декоратором @requires_access (через _ensure_access).
+            Возвращаются только встречи указанной команды.
+        """
+
+        if not await self.team_repo.belongs_to_team(team.id, user.id):
+            raise AuthorizationError(message="You are not allowed to do that.")
+
+        if user.role not in (RoleEnum.MEMBER, RoleEnum.MANAGER):
+            raise AuthorizationError(message="You are not allowed to do that.")
+
+        if date_from is None:
+            date_from = datetime.now(UTC)
+
+        if date_until and date_from >= date_until:
+            raise WrongInputError("Date_from must be <= date_until")
+
+        return await self.task_repo.get_all_tasks_from_to(
+            user.id, 
+            date_from, 
+            date_until
+        )

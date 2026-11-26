@@ -29,7 +29,7 @@
   <div class="evaluation-actions">
     <p>
       {% if can('team:' ~ team_id ~ ':task:' ~ task_id ~ ':evaluation:create') %}
-        <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/evaluation/new">Add New Evaluation</a>
+        <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}/evaluation/{{ evaluation.id }}/edit">Evaluate</a>
       {% endif %}
       <a class="btn" href="/views/teams/{{ team_id }}/tasks/{{ task_id }}">Back to task</a>
     </p>

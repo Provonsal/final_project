@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from typing import Optional, cast
 
-from app.dependencies import EvaluationDep, TaskDep, TeamDep, TaskServiceDep, ManagerDep, MemberOrManagerDep, CommentServiceDep, EvaluationServiceDep, get_evaluation
+from app.dependencies import EvaluationDep, MemberDep, TaskDep, TeamDep, TaskServiceDep, ManagerDep, MemberOrManagerDep, CommentServiceDep, EvaluationServiceDep, get_evaluation
 from app.models import RateEnum
 from app.models.models import Task
 from app.schemas.create_task import CreateTask
@@ -44,6 +44,9 @@ async def create_task(
     """
     
     task = await task_service_dep.create_task(data, team, user)
+
+    await task.awaitable_attrs.rate
+
     evaluation_schema = ResponseEvaluationSchema(
         id=task.rate.id,
         rate=task.rate.rate,
@@ -172,7 +175,6 @@ async def update_tasks(
     team: TeamDep,
     user: ManagerDep,
     task: TaskDep,
-    evaluation: EvaluationDep,
     task_service_dep: TaskServiceDep,
     comment_service: CommentServiceDep,
 ):
@@ -195,6 +197,8 @@ async def update_tasks(
     """
     task = await task_service_dep.update_task(data, task, user, team)
     comments = cast(list, await comment_service.get_comments(task, user, team))
+
+    await task.awaitable_attrs.rate
     
     evaluation_schema = ResponseEvaluationSchema(
         id=task.rate.id,
@@ -202,6 +206,78 @@ async def update_tasks(
         author=task.rate.rater,
         display_text=task.rate.rate.name
     )
+    return ResponseTaskSchema(
+        id=task.id,
+        title=task.title,
+        description=task.description,
+        assignee_id=task.assignee,
+        due_date=task.due_date.isoformat(),
+        status=task.status,
+        team_id=task.team_id,
+        evaluation=evaluation_schema,
+        comments=comments
+    )
+
+@router.patch("/{task_id}/start")
+async def start_task(
+    team: TeamDep,
+    user: MemberDep,
+    task: TaskDep,
+    task_service_dep: TaskServiceDep,
+    comment_service: CommentServiceDep,
+    ):
+    """
+    
+    """
+
+    task = await task_service_dep.start_task(team, user, task)
+    comments = cast(list, await comment_service.get_comments(task, user, team))
+
+    await task.awaitable_attrs.rate
+        
+    evaluation_schema = ResponseEvaluationSchema(
+        id=task.rate.id,
+        rate=task.rate.rate,
+        author=task.rate.rater,
+        display_text=task.rate.rate.name
+    )
+
+    return ResponseTaskSchema(
+        id=task.id,
+        title=task.title,
+        description=task.description,
+        assignee_id=task.assignee,
+        due_date=task.due_date.isoformat(),
+        status=task.status,
+        team_id=task.team_id,
+        evaluation=evaluation_schema,
+        comments=comments
+    )
+
+@router.patch("/{task_id}/end")
+async def end_task(
+    team: TeamDep,
+    user: MemberDep,
+    task: TaskDep,
+    task_service_dep: TaskServiceDep,
+    comment_service: CommentServiceDep,
+    ):
+    """
+    
+    """
+
+    task = await task_service_dep.end_task(team, user, task)
+    comments = cast(list, await comment_service.get_comments(task, user, team))
+
+    await task.awaitable_attrs.rate
+        
+    evaluation_schema = ResponseEvaluationSchema(
+        id=task.rate.id,
+        rate=task.rate.rate,
+        author=task.rate.rater,
+        display_text=task.rate.rate.name
+    )
+
     return ResponseTaskSchema(
         id=task.id,
         title=task.title,

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from html import escape
 
 from app.views.api_client import api_call, ok, redirect_if_anonymous
@@ -99,6 +99,29 @@ async def task_detail(request: Request, team_id: str, task_id: str):
          "status_labels": STATUS_LABELS},
     )
 
+@router.get("/{team_id}/tasks/{task_id}/start", response_class=HTMLResponse)
+async def task_start(request: Request, team_id: str, task_id: str):
+    if (redir := redirect_if_anonymous(request)):
+        return redir
+    r1 = await api_call(request, "PATCH", f"/api/v1/teams/{team_id}/tasks/{task_id}/start")
+    if not ok(r1):
+        safe_error = escape(r1.text)
+        safe_team_id = escape(team_id, quote=True)
+        return HTMLResponse(f"<pre class='error'>{safe_error}</pre><a href='/views/teams/{safe_team_id}/tasks'>Back</a>")
+
+    return JSONResponse({"result": True})
+
+@router.get("/{team_id}/tasks/{task_id}/end", response_class=HTMLResponse)
+async def task_end(request: Request, team_id: str, task_id: str):
+    if (redir := redirect_if_anonymous(request)):
+        return redir
+    r1 = await api_call(request, "PATCH", f"/api/v1/teams/{team_id}/tasks/{task_id}/end")
+    if not ok(r1):
+        safe_error = escape(r1.text)
+        safe_team_id = escape(team_id, quote=True)
+        return HTMLResponse(f"<pre class='error'>{safe_error}</pre><a href='/views/teams/{safe_team_id}/tasks'>Back</a>")
+
+    return JSONResponse({"result": True})
 
 @router.get("/{team_id}/tasks/{task_id}/edit", response_class=HTMLResponse)
 async def edit_task(request: Request, team_id: str, task_id: str):

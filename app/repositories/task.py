@@ -1,14 +1,15 @@
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 import uuid
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import selectinload
 
 
 from app.models.RoleEnum import RoleEnum
 from app.models.models import TeamUser, User
 from app.repositories.crud_protocol import BaseRepo
-from app.models import Task
+from app.models import Task, TaskStatusEnum
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -67,3 +68,41 @@ class TaskRepo(BaseRepo[Task]):
         return (await self.session.scalars(
             select(self.model).where((self.model.team_id == team_id) & (self.model.assignee == user_id))
         )).all()
+
+    async def start_task(self, task_id: uuid.UUID):
+        stmt = update(self.model).where(self.model.id == task_id).values(status=TaskStatusEnum.IN_PROGRESS).returning(self.model)
+        return (await self.session.execute(stmt)).scalar_one()
+
+    async def end_task(self, task_id: uuid.UUID):
+        stmt = update(self.model).where(self.model.id == task_id).values(status=TaskStatusEnum.DONE).returning(self.model)
+        return (await self.session.execute(stmt)).scalar_one()
+
+    async def get_all_tasks_from_to(self, user_id, date_from, date_until):
+        """
+        Получить все задачи в диапазоне дат.
+
+        Args:
+            team_id: Идентификатор команды
+            date_from: Пока не используется (Временно)
+            date_until: Дата окончания (включительно, по умолчанию текущее время + 30 дней)
+
+        Returns:
+            list[Meeting]: Список совещаний в диапазоне дат
+        """
+
+        date_until = date_until if date_until is not None else datetime.now(tz=UTC) + timedelta(days=30)
+
+        return (
+            await self.session.scalars(
+                select(
+                    self.model
+                ).where(
+                    self.model.assignee == user_id
+                ).where(
+                    self.model.due_date <= date_until
+                ).where(
+                    self.model.status != TaskStatusEnum.DONE
+                )
+            )
+        ).all()
+    

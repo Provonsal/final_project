@@ -269,6 +269,7 @@ async def update_meeting(
         PATCH /api/v1/teams/meetings/{meeting_id}
         Body: {"title": "Updated Meeting"}
     """
+    
     meeting = await meeting_service_dep.update(meeting, team, data, user)
     return ResponseMeetingSchema(
         id=meeting.id,
