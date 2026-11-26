@@ -13,8 +13,10 @@ from app.main import app  # или from app.main import app
 
 IS_CI = os.getenv("CI") == "true"
 
-@pytest_asyncio.fixture(scope="session")
-async def postgres_container():
+# 1. СИНХРОННАЯ фикстура для контейнера (scope="session")
+# Это обходит конфликты asyncio scope, так как запуск Docker — синхронная операция
+@pytest.fixture(scope="session")
+def postgres_url():
     """Запускаем PostgreSQL в контейнере ТОЛЬКО если мы не в CI"""
     if IS_CI:
         
@@ -23,23 +25,30 @@ async def postgres_container():
 
     with PostgresContainer("postgres:17-alpine") as postgres:
         url = postgres.get_connection_url()
-        async_url = url.replace("postgresql://", "postgresql+asyncpg://")
+        async_url = url.replace("postgresql+psycopg2://", "postgresql+asyncpg://")
         yield async_url
 
-
-@pytest_asyncio.fixture(scope="session")
-async def engine(postgres_container):
-    engine = create_async_engine(postgres_container, echo=False, pool_pre_ping=True)
+# 2. Асинхронный engine (scope="function")
+# Пересоздание таблиц на каждый тест занимает ~0.1с и гарантирует изоляцию
+@pytest_asyncio.fixture(scope="function")
+async def engine(postgres_url):
+    engine = create_async_engine(
+        postgres_url,
+        echo=False,
+        pool_pre_ping=True,
+    )
     
+    # Создаем таблицы
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     
     yield engine
     
+    # Чистим за собой после теста
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+    
     await engine.dispose()
-
 
 # 3. Сессия БД (scope="function")
 @pytest_asyncio.fixture(scope="function")
