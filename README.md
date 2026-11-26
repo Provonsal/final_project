@@ -179,27 +179,6 @@ docker compose up -d
 - Healthcheck: http://localhost:8000/health
 
 
-
-## 🛠️ Локальная разработка
-
-**Требования**: Docker, Docker Compose.
-
-```bash
-# 1. Клонируйте репозиторий
-git clone https://github.com/Provonsal/final_project.git
-cd final_project
-
-# 2. Подготовьте .env
-cp .env.example .env
-# отредактируйте .env
-
-# 3. Запустите dev-стек (с hot-reload)
-docker compose up --build
-```
-
-Dev-стек монтирует app/, utils/ и alembic/ с хоста — изменения в коде
-подхватываются Uvicorn'ом автоматически, пересборка не требуется.
-
 ## Миграции
 
 ```bash
