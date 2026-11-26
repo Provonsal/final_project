@@ -4,101 +4,21 @@ app.views package
 Submodules
 ----------
 
-app.views.api\_client module
-----------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: app.views.api_client
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.views.auth module
----------------------
-
-.. automodule:: app.views.auth
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.views.calendar module
--------------------------
-
-.. automodule:: app.views.calendar
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.views.comments module
--------------------------
-
-.. automodule:: app.views.comments
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.views.evaluations module
-----------------------------
-
-.. automodule:: app.views.evaluations
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.views.meetings module
--------------------------
-
-.. automodule:: app.views.meetings
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.views.permissions module
-----------------------------
-
-.. automodule:: app.views.permissions
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.views.policy module
------------------------
-
-.. automodule:: app.views.policy
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.views.tasks module
-----------------------
-
-.. automodule:: app.views.tasks
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.views.teams module
-----------------------
-
-.. automodule:: app.views.teams
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.views.templates module
---------------------------
-
-.. automodule:: app.views.templates
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.views.users module
-----------------------
-
-.. automodule:: app.views.users
-   :members:
-   :show-inheritance:
-   :undoc-members:
+   app.views.api_client
+   app.views.auth
+   app.views.calendar
+   app.views.comments
+   app.views.evaluations
+   app.views.meetings
+   app.views.permissions
+   app.views.policy
+   app.views.tasks
+   app.views.teams
+   app.views.templates
+   app.views.users
 
 Module contents
 ---------------

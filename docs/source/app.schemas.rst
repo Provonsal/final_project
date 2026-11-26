@@ -4,157 +4,33 @@ app.schemas package
 Submodules
 ----------
 
-app.schemas.create\_comment module
-----------------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: app.schemas.create_comment
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.schemas.create\_evaluation module
--------------------------------------
-
-.. automodule:: app.schemas.create_evaluation
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.schemas.create\_meeting module
-----------------------------------
-
-.. automodule:: app.schemas.create_meeting
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.schemas.create\_team module
--------------------------------
-
-.. automodule:: app.schemas.create_team
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.schemas.refresh\_token module
----------------------------------
-
-.. automodule:: app.schemas.refresh_token
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.schemas.success module
---------------------------
-
-.. automodule:: app.schemas.success
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.schemas.task\_create module
--------------------------------
-
-.. automodule:: app.schemas.task_create
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.schemas.task\_update module
--------------------------------
-
-.. automodule:: app.schemas.task_update
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.schemas.token module
-------------------------
-
-.. automodule:: app.schemas.token
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.schemas.token\_payload module
----------------------------------
-
-.. automodule:: app.schemas.token_payload
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.schemas.update\_comment module
-----------------------------------
-
-.. automodule:: app.schemas.update_comment
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.schemas.update\_evaluation module
--------------------------------------
-
-.. automodule:: app.schemas.update_evaluation
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.schemas.update\_meeting module
-----------------------------------
-
-.. automodule:: app.schemas.update_meeting
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.schemas.update\_refresh\_token module
------------------------------------------
-
-.. automodule:: app.schemas.update_refresh_token
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.schemas.update\_team module
--------------------------------
-
-.. automodule:: app.schemas.update_team
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.schemas.user\_login module
-------------------------------
-
-.. automodule:: app.schemas.user_login
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.schemas.user\_me module
----------------------------
-
-.. automodule:: app.schemas.user_me
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.schemas.user\_register module
----------------------------------
-
-.. automodule:: app.schemas.user_register
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.schemas.user\_response module
----------------------------------
-
-.. automodule:: app.schemas.user_response
-   :members:
-   :show-inheritance:
-   :undoc-members:
+   app.schemas.create_comment
+   app.schemas.create_evaluation
+   app.schemas.create_meeting
+   app.schemas.create_task
+   app.schemas.create_team
+   app.schemas.refresh_token
+   app.schemas.register_user
+   app.schemas.response_comment
+   app.schemas.response_evaluation
+   app.schemas.response_invite_code
+   app.schemas.response_meeting
+   app.schemas.response_register_user
+   app.schemas.response_success
+   app.schemas.response_task
+   app.schemas.response_team
+   app.schemas.response_token
+   app.schemas.response_user
+   app.schemas.response_user_me
+   app.schemas.update_comment
+   app.schemas.update_evaluation
+   app.schemas.update_meeting
+   app.schemas.update_refresh_token
+   app.schemas.update_task
+   app.schemas.update_team
 
 Module contents
 ---------------

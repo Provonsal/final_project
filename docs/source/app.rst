@@ -16,21 +16,11 @@ Subpackages
 Submodules
 ----------
 
-app.dependencies module
------------------------
+.. toctree::
+   :maxdepth: 4
 
-.. automodule:: app.dependencies
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-app.main module
----------------
-
-.. automodule:: app.main
-   :members:
-   :show-inheritance:
-   :undoc-members:
+   app.dependencies
+   app.main
 
 Module contents
 ---------------
