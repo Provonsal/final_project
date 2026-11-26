@@ -134,11 +134,19 @@
 
 В папке где скачан `docker-compose.yml` и `.env.example`:
 
+**Если Linux-like OC**
 ```bash
 cp .env.example .env
 ```
 
-Откройте .env и заполните значения:
+**Если Windows**
+```bash
+copy .env.example .env
+```
+
+Или просто скопируйте и переименуйте в `.env` файл
+
+Откройте `.env` и заполните значения:
 ```dotenv
 POSTGRES_USER="your_username"
 POSTGRES_PASSWORD="your_password"
