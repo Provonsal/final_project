@@ -17,7 +17,7 @@ services:
       retries: 5
 
   migrate:
-    image: ghcr.io/Provonsal/final_project:${APP_VERSION:-latest}
+    image: ghcr.io/provonsal/final_project:${APP_VERSION:-latest}
     user: appuser:appuser
     command: ["alembic", "upgrade", "head"]
     environment:
@@ -29,7 +29,7 @@ services:
       - custom
 
   backend:
-    image: ghcr.io/Provonsal/final_project:${APP_VERSION:-latest}
+    image: ghcr.io/provonsal/final_project:${APP_VERSION:-latest}
     user: appuser:appuser
     restart: unless-stopped
     ports:
