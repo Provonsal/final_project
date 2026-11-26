@@ -1,5 +1,6 @@
 from fastapi import Request
 from fastapi.responses import JSONResponse
+import sqlalchemy.exc
 from .exceptions import AppException
 from fastapi.exceptions import RequestValidationError
 from fastapi import HTTPException
@@ -18,6 +19,19 @@ async def app_exception_handler(request: Request, exc: AppException):
             }
         },
     )
+
+async def db_not_found_exception_handler(request: Request, exc: sqlalchemy.exc.NoResultFound):
+    """Перехватывает ошибки ненайденных строк в бд и приводит их к общему формату."""
+    return JSONResponse(
+            status_code=404,
+            content={
+                "error": {
+                    "code": "NOT_FOUND",
+                    "message": "Данные не найдены",
+                    "details": {},  
+                }
+            },
+        )
 
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     """Перехватывает ошибки валидации Pydantic (422) и приводит их к общему формату."""

@@ -276,7 +276,7 @@ class TeamInviteCode(BaseModel):
     """
     TeamInviteCode model representing an invitation code for teams.
     
-    Attributes:
+    Args:
         creator (uuid.UUID): The unique identifier of the user who created the invite code.
         active (bool): Indicates whether the invite code is active.
         connected_to (uuid.UUID): The unique identifier of the team associated with the invite code.

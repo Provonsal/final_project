@@ -1,6 +1,8 @@
 from contextlib import asynccontextmanager
 import os
 
+from sqlalchemy.exc import NoResultFound
+
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
@@ -8,7 +10,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.exc.exceptions import AppException
-from app.exc.handlers import app_exception_handler, http_exception_handler, unhandled_exception_handler, validation_exception_handler
+from app.exc.handlers import app_exception_handler, db_not_found_exception_handler, http_exception_handler, unhandled_exception_handler, validation_exception_handler
 
 from .routers.api.api_router import router as api_router
 from starlette.middleware.sessions import SessionMiddleware
@@ -70,6 +72,7 @@ app.add_exception_handler(AppException, app_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(HTTPException, http_exception_handler)
 app.add_exception_handler(Exception, unhandled_exception_handler)
+app.add_exception_handler(NoResultFound, db_not_found_exception_handler)
 
 
 @app.get("/views")

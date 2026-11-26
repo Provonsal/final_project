@@ -39,6 +39,7 @@ async def create_team(
         POST /api/v1/teams/
         Body: {"name": "My Team"}
     """
+
     new_team = await team_service_dep.create_team(user, data)
     invite_code = await team_service_dep.get_invite_code(new_team, user)
     await team_service_dep.join_team(user, invite_code.body)
@@ -70,6 +71,7 @@ async def join(
         POST /api/v1/teams/join
         Body: {"invite_code": "ABC123"}
     """
+    
     result = await team_dep.join_team(current_user, invite_code)
     if result:
         return ResponseOperationSuccess()
@@ -98,6 +100,7 @@ async def get_invite_code(
     Example:
         POST /api/v1/teams/code
     """
+
     invite_code = await team_service_dep.get_invite_code(team, user)
     return ResponseInviteCodeSchema(
         id=invite_code.id,
@@ -127,6 +130,7 @@ async def leave(
     Example:
         POST /api/v1/teams/{team_id}/leave
     """
+
     result = await team_dep.leave_team(current_user, team)
     if result:
         return ResponseOperationSuccess()
@@ -151,6 +155,7 @@ async def read_teams(
     Example:
         GET /api/v1/teams/
     """
+
     teams = await team_service_dep.get_teams(user)
     return [
         ResponseTeamSchema(
@@ -181,6 +186,7 @@ async def read_team(
     Example:
         GET /api/v1/teams/{team_id}
     """
+
     team = await team_service_dep.get_team(team, user)
     return ResponseTeamSchema(
         id=team.id,
@@ -214,6 +220,7 @@ async def update_team(
         PATCH /api/v1/teams/{team_id}
         Body: {"name": "Updated Team Name"}
     """
+
     team = await team_service_dep.update(team, user, data)
     return ResponseTeamSchema(
         id=team.id,
@@ -244,6 +251,7 @@ async def delete_team(
     Example:
         DELETE /api/v1/teams/{team_id}
     """
+
     result = await team_service_dep.delete(team, user)
     if result:
         return ResponseOperationSuccess()
@@ -271,6 +279,7 @@ async def members(
     Example:
         GET /api/v1/teams/{team_id}/members
     """
+    
     members_list = await team_service_dep.get_team_users(team, user)
     return [
         ResponseUserSchema(
