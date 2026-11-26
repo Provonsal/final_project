@@ -21,7 +21,7 @@ async def postgres_container():
         yield os.getenv("DATABASE_URL")
         return
 
-    with PostgresContainer("postgres:15-alpine") as postgres:
+    with PostgresContainer("postgres:17-alpine") as postgres:
         url = postgres.get_connection_url()
         async_url = url.replace("postgresql://", "postgresql+asyncpg://")
         yield async_url
