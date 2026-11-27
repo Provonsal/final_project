@@ -60,9 +60,8 @@ async def register_submit(
     username: str = Form(...),
     name: str = Form(...),
     password: str = Form(...),
-    role: str = Form("guest"),
 ):
-    payload = {"username": username, "name": name, "password": password, "role": role}
+    payload = {"username": username, "name": name, "password": password}
     r = await api_call(request, "POST", "/api/v1/auth/register", data=payload)
     if not ok(r):
         return templates.TemplateResponse(

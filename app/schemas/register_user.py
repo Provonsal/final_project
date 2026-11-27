@@ -24,7 +24,6 @@ class UserRegister(BaseModel):
     username: str
     name: str
     password: str
-    role: RoleEnum | None = RoleEnum.GUEST
 
     @classmethod
     def as_form(
@@ -32,7 +31,6 @@ class UserRegister(BaseModel):
         username: str = Form(...),
         name: str = Form(...),
         password: str = Form(...),
-        role: RoleEnum = Form(RoleEnum.GUEST),
     ) -> "UserRegister":
         """
         Создаёт экземпляр UserRegister из FastAPI Form данных.
@@ -46,4 +44,4 @@ class UserRegister(BaseModel):
         Returns:
             UserRegister: Экземпляр схемы пользователя
         """
-        return cls(username=username, name=name, password=password, role=role)
+        return cls(username=username, name=name, password=password)
