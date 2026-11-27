@@ -56,7 +56,7 @@ class UserService:
         except NoResultFound:
             pass
 
-        role = RoleEnum.GUEST if user.role is None else user.role
+        role = RoleEnum.GUEST
 
         salt, hash_pwd = pwd_manager.create_credentials(user.password)
                 

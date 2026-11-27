@@ -15,13 +15,12 @@ SERVICE_MODULE = "app.services.user_service"
 # ==================== ХЕЛПЕРЫ ====================
 
 def make_user_register(username="user@example.com", name="Test User",
-                       password="secret123", role=None):
+                       password="secret123"):
     """Заглушка UserRegister."""
     return SimpleNamespace(
         username=username,
         name=name,
         password=password,
-        role=role,
     )
 
 
@@ -63,8 +62,8 @@ class TestRegister:
 
     @pytest.mark.asyncio
     async def test_register_success_default_role_is_guest(self, service, repos, session, pwd_manager):
-        """Успешная регистрация без указанной роли → GUEST."""
-        data = make_user_register(role=None)
+        """Успешная регистрация → GUEST роль."""
+        data = make_user_register()
         repos.user.get_by_login.side_effect = NoResultFound()
 
         with patch(f"{SERVICE_MODULE}.User") as user_cls, \
@@ -82,23 +81,6 @@ class TestRegister:
         assert call_kwargs["role"] == RoleEnum.GUEST
         assert call_kwargs["email"] == data.username
         assert call_kwargs["name"] == data.name
-
-    @pytest.mark.asyncio
-    async def test_register_success_with_explicit_role(self, service, repos, session, pwd_manager):
-        """Регистрация с указанной ролью → используется переданная роль."""
-        data = make_user_register(role=RoleEnum.MANAGER)
-        repos.user.get_by_login.side_effect = NoResultFound()
-
-        with patch(f"{SERVICE_MODULE}.User") as user_cls, \
-             patch(f"{SERVICE_MODULE}.UserCredentials") as creds_cls:
-            new_user = SimpleNamespace(id=uuid4(), role=RoleEnum.MANAGER)
-            user_cls.return_value = new_user
-            creds_cls.return_value = SimpleNamespace()
-
-            result = await service.register(data, pwd_manager)
-
-        call_kwargs = user_cls.call_args.kwargs
-        assert call_kwargs["role"] == RoleEnum.MANAGER
 
     @pytest.mark.asyncio
     async def test_register_calls_pwd_manager_with_password(self, service, repos, pwd_manager):
@@ -204,23 +186,6 @@ class TestRegister:
         # Только после этого — создание
         assert pwd_manager.create_credentials.called
         assert repos.user.create.called
-
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize("role", [RoleEnum.GUEST, RoleEnum.AUTH, RoleEnum.MEMBER, RoleEnum.MANAGER])
-    async def test_register_preserves_any_explicit_role(self, service, repos, session, pwd_manager, role):
-        """Любая явно указанная роль сохраняется (не перезаписывается на GUEST)."""
-        data = make_user_register(role=role)
-        repos.user.get_by_login.side_effect = NoResultFound()
-
-        with patch(f"{SERVICE_MODULE}.User") as user_cls, \
-             patch(f"{SERVICE_MODULE}.UserCredentials") as creds_cls:
-            user_cls.return_value = SimpleNamespace()
-            creds_cls.return_value = SimpleNamespace()
-
-            await service.register(data, pwd_manager)
-
-        call_kwargs = user_cls.call_args.kwargs
-        assert call_kwargs["role"] == role
 
 
 # ==================== TestGetUser ====================
